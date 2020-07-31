@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leechcore_device_hvsavedstate", "leechcore_device_hvsavedstate\leechcore_device_hvsavedstate.vcxproj", "{7826D59A-9628-4000-9224-546076BE9213}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EBFBB935-6665-4257-9378-8A548CD665AD} = {EBFBB935-6665-4257-9378-8A548CD665AD}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "leechcore_ft601_driver_linux", "leechcore_ft601_driver_linux", "{98229C81-F456-470A-ABA2-FDA36531A9FC}"
+	ProjectSection(SolutionItems) = preProject
+		leechcore_ft601_driver_linux\fpga_libusb.c = leechcore_ft601_driver_linux\fpga_libusb.c
+		leechcore_ft601_driver_linux\fpga_libusb.h = leechcore_ft601_driver_linux\fpga_libusb.h
+		leechcore_ft601_driver_linux\leechcore_ft601_driver_linux.c = leechcore_ft601_driver_linux\leechcore_ft601_driver_linux.c
+		leechcore_ft601_driver_linux\leechcore_ft601_driver_linux.h = leechcore_ft601_driver_linux\leechcore_ft601_driver_linux.h
+		leechcore_ft601_driver_linux\Makefile = leechcore_ft601_driver_linux\Makefile
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leechcore_device_rawtcp", "leechcore_device_rawtcp\leechcore_device_rawtcp.vcxproj", "{EBFBB935-6665-4257-9378-8A548CD665AD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leechcore_device_sp605tcp", "leechcore_device_sp605tcp\leechcore_device_sp605tcp.vcxproj", "{06F06E97-8A9B-499A-B90B-F11AE8DA3A40}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EBFBB935-6665-4257-9378-8A548CD665AD} = {EBFBB935-6665-4257-9378-8A548CD665AD}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7826D59A-9628-4000-9224-546076BE9213}.Debug|x64.ActiveCfg = Debug|x64
+		{7826D59A-9628-4000-9224-546076BE9213}.Debug|x64.Build.0 = Debug|x64
+		{7826D59A-9628-4000-9224-546076BE9213}.Debug|x86.ActiveCfg = Debug|x64
+		{7826D59A-9628-4000-9224-546076BE9213}.Debug|x86.Build.0 = Debug|x64
+		{7826D59A-9628-4000-9224-546076BE9213}.Release|x64.ActiveCfg = Release|x64
+		{7826D59A-9628-4000-9224-546076BE9213}.Release|x64.Build.0 = Release|x64
+		{7826D59A-9628-4000-9224-546076BE9213}.Release|x86.ActiveCfg = Release|Win32
+		{7826D59A-9628-4000-9224-546076BE9213}.Release|x86.Build.0 = Release|Win32
+		{EBFBB935-6665-4257-9378-8A548CD665AD}.Debug|x64.ActiveCfg = Debug|x64
+		{EBFBB935-6665-4257-9378-8A548CD665AD}.Debug|x64.Build.0 = Debug|x64
+		{EBFBB935-6665-4257-9378-8A548CD665AD}.Debug|x86.ActiveCfg = Debug|x64
+		{EBFBB935-6665-4257-9378-8A548CD665AD}.Debug|x86.Build.0 = Debug|x64
+		{EBFBB935-6665-4257-9378-8A548CD665AD}.Release|x64.ActiveCfg = Release|x64
+		{EBFBB935-6665-4257-9378-8A548CD665AD}.Release|x64.Build.0 = Release|x64
+		{EBFBB935-6665-4257-9378-8A548CD665AD}.Release|x86.ActiveCfg = Release|Win32
+		{EBFBB935-6665-4257-9378-8A548CD665AD}.Release|x86.Build.0 = Release|Win32
+		{06F06E97-8A9B-499A-B90B-F11AE8DA3A40}.Debug|x64.ActiveCfg = Debug|x64
+		{06F06E97-8A9B-499A-B90B-F11AE8DA3A40}.Debug|x64.Build.0 = Debug|x64
+		{06F06E97-8A9B-499A-B90B-F11AE8DA3A40}.Debug|x86.ActiveCfg = Debug|x64
+		{06F06E97-8A9B-499A-B90B-F11AE8DA3A40}.Debug|x86.Build.0 = Debug|x64
+		{06F06E97-8A9B-499A-B90B-F11AE8DA3A40}.Release|x64.ActiveCfg = Release|x64
+		{06F06E97-8A9B-499A-B90B-F11AE8DA3A40}.Release|x64.Build.0 = Release|x64
+		{06F06E97-8A9B-499A-B90B-F11AE8DA3A40}.Release|x86.ActiveCfg = Release|Win32
+		{06F06E97-8A9B-499A-B90B-F11AE8DA3A40}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F99A74F7-BBF5-4F3D-AFB0-FFC47A0E4225}
+	EndGlobalSection
+EndGlobal

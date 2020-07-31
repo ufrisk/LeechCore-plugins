@@ -1,0 +1,11 @@
+*.o
+*.aps
+*.ilk
+*.pdb
+*.exp
+*.iobj
+*.ipdb
+*.lastcodeanalysissucceeded
+/.vs
+/.gitattributes
+/files
