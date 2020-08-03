@@ -473,7 +473,7 @@ BOOL Device605_TCP_Command(_In_ PLC_CONTEXT ctxLC, _In_ QWORD fOption, _In_ DWOR
 }
 
 _Success_(return)
-EXPORTED_FUNCTION BOOL LeechCore_Plugin_Open(_Inout_ PLC_CONTEXT ctxLC)
+EXPORTED_FUNCTION BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC)
 {
     PDEVICE_CONTEXT_SP605_TCP ctx;
     CHAR _szBuffer[MAX_PATH];
