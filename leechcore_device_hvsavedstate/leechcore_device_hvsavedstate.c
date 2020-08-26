@@ -442,9 +442,10 @@ BOOL DeviceHvSavedState_GetOption(_In_ PLC_CONTEXT ctxLC, _In_ QWORD fOption, _O
 }
 
 _Success_(return)
-EXPORTED_FUNCTION BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC)
+EXPORTED_FUNCTION BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC, _Out_opt_ PPLC_CONFIG_ERRORINFO ppLcCreateErrorInfo)
 {
     PHVSAVEDSTATE_CONTEXT ctx = NULL;
+    if(ppLcCreateErrorInfo) { *ppLcCreateErrorInfo = NULL; }
     if(ctxLC->version != LC_CONTEXT_VERSION) { return FALSE; }
     if(!(ctx = (PHVSAVEDSTATE_CONTEXT)LocalAlloc(LMEM_ZEROINIT, sizeof(HVSAVEDSTATE_CONTEXT)))) { return FALSE; }
     if(!DeviceHvSavedState_Open_InitializeDll(ctx)) {

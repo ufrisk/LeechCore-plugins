@@ -238,11 +238,12 @@ BOOL DeviceRawTCP_WriteDMA(_In_ PLC_CONTEXT ctxLC, _In_ QWORD qwAddr, _In_ DWORD
 }
 
 _Success_(return)
-EXPORTED_FUNCTION BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC)
+EXPORTED_FUNCTION BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC, _Out_opt_ PPLC_CONFIG_ERRORINFO ppLcCreateErrorInfo)
 {
 	PDEVICE_CONTEXT_RAWTCP ctx;
 	CHAR _szBuffer[MAX_PATH];
 	LPSTR szAddress = NULL, szPort = NULL;
+	if(ppLcCreateErrorInfo) { *ppLcCreateErrorInfo = NULL; }
 	if(ctxLC->version != LC_CONTEXT_VERSION) { return FALSE; }
 #ifdef _WIN32
 	WSADATA WsaData;
