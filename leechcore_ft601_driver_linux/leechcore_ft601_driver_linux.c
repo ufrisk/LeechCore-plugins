@@ -3,10 +3,23 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <sys/ioctl.h>
 
 #define FT601_HANDLE_LIBUSB         (void*)-2
 #define min(a, b)                   (((a) < (b)) ? (a) : (b))
+
+static bool CreateFromKernel(int index, void **pftHandle)
+{
+    char szDevice[12] = { '/', 'd', 'e', 'v', '/', 'f', 't', '6', '0', 'x', '0' + index, 0 };
+    int rc = open(szDevice, O_RDWR | O_CLOEXEC);
+    if (rc > 0) {
+        *pftHandle = (void*)(uint64_t)rc;
+        return true;
+    } else {
+        return false;
+    }
+}
 
 __attribute__((visibility("default")))
 uint32_t FT_Create(void *pvArg, uint32_t dwFlags, void **pftHandle)
@@ -16,13 +29,17 @@ uint32_t FT_Create(void *pvArg, uint32_t dwFlags, void **pftHandle)
     {
         // NB! underlying driver will create a device object at /dev/ft60x[0-3]
         //     when loaded. Iterate through possible combinations at load time.
-        char szDevice[12] = { '/', 'd', 'e', 'v', '/', 'f', 't', '6', '0', 'x', '0', 0 };
-        for(i = 0; i < 4; i++) {
-            szDevice[10] = '0' + i;
-            rc = open(szDevice, O_RDWR | O_CLOEXEC);
-            if(rc > 0) {
-                *pftHandle = (void*)(uint64_t)rc;
+        if (dwFlags == /*FT_OPEN_BY_INDEX*/ 0x10 && pvArg != 0) {
+            // if the index is passed explicitly, i.e. not 0, use that index only
+            if (CreateFromKernel(((int) (off_t) pvArg) - 1, pftHandle)) {
                 return 0;
+            }
+        } else {
+            // no explicit index - try 0-3
+            for (i = 0; i < 4; i++) {
+                if (CreateFromKernel(i, pftHandle)) {
+                    return 0;
+                }
             }
         }
     }
