@@ -11,10 +11,10 @@
 // - README: https://github.com/ufrisk/LeechCore
 // - GUIDE:  https://github.com/ufrisk/LeechCore/wiki
 //
-// (c) Ulf Frisk, 2020
+// (c) Ulf Frisk, 2020-2021
 // Author: Ulf Frisk, pcileech@frizk.net
 //
-// Header Version: 2.1
+// Header Version: 2.6
 //
 
 #ifndef __LEECHCORE_H__
@@ -28,23 +28,25 @@ extern "C" {
 //-----------------------------------------------------------------------------
 
 #ifdef _WIN32
-#include <Windows.h>
 
+#include <Windows.h>
 #define EXPORTED_FUNCTION                   __declspec(dllexport)
-typedef ULONG64                             QWORD, *PQWORD;
+typedef unsigned __int64                    QWORD, *PQWORD;
+
 #endif /* _WIN32 */
 #ifdef LINUX
+
 #include <inttypes.h>
 #include <stdlib.h>
-
 #define EXPORTED_FUNCTION                   __attribute__((visibility("default")))
-typedef void                                VOID, *PVOID, *HANDLE;
-typedef long long unsigned int              QWORD, *PQWORD, ULONG64;
-typedef uint32_t                            DWORD, *PDWORD, BOOL;
-typedef uint8_t                             BYTE, *PBYTE;
-typedef char                                CHAR, *LPSTR;
-typedef const char                          *LPCSTR;
-typedef wchar_t                             WCHAR, *PWCHAR, *LPWSTR;
+typedef void                                VOID, *PVOID, *HANDLE, **PHANDLE, *HMODULE;
+typedef long long unsigned int              QWORD, *PQWORD, ULONG64, *PULONG64;
+typedef uint64_t                            SIZE_T, *PSIZE_T, FILETIME, *PFILETIME;
+typedef uint32_t                            DWORD, *PDWORD, *LPDWORD, BOOL, *PBOOL, NTSTATUS;
+typedef uint16_t                            WORD, *PWORD;
+typedef uint8_t                             BYTE, *PBYTE, *LPBYTE, UCHAR;
+typedef char                                CHAR, *PCHAR, *LPSTR, *LPCSTR;
+typedef uint16_t                            WCHAR, *PWCHAR, *LPWSTR, *LPCWSTR;
 #define MAX_PATH                            260
 #define _In_
 #define _In_z_
@@ -52,16 +54,22 @@ typedef wchar_t                             WCHAR, *PWCHAR, *LPWSTR;
 #define _In_reads_(x)
 #define _In_reads_opt_(x)
 #define _Inout_
+#define _Inout_bytecount_(x)
+#define _Inout_opt_
+#define _Inout_updates_opt_(x)
 #define _Out_
 #define _Out_opt_
 #define _Out_writes_(x)
+#define _Out_writes_bytes_opt_(x)
 #define _Out_writes_opt_(x)
-#define _Inout_updates_opt_(x)
+#define _Out_writes_to_(x,y)
+#define _When_(x,y)
 #define _Frees_ptr_opt_
 #define _Post_ptr_invalid_
 #define _Check_return_opt_
 #define _Printf_format_string_
 #define _Success_(x)
+
 #endif /* LINUX */
 
 
@@ -301,6 +309,57 @@ EXPORTED_FUNCTION BOOL LcWrite(
 // or its devices in various ways.
 //-----------------------------------------------------------------------------
 
+/*
+* Set an option as defined by LC_OPT_*. (R option).
+* -- hLC
+* -- fOption = LC_OPT_*
+* -- cbData
+* -- pbData
+* -- pcbData
+*/
+_Success_(return)
+EXPORTED_FUNCTION BOOL LcGetOption(
+    _In_ HANDLE hLC,
+    _In_ QWORD fOption,
+    _Out_ PQWORD pqwValue
+);
+
+/*
+* Get an option as defined by LC_OPT_*. (W option).
+* -- hLC
+* -- fOption = LC_OPT_*
+* -- cbData
+* -- pbData
+*/
+_Success_(return)
+EXPORTED_FUNCTION BOOL LcSetOption(
+    _In_ HANDLE hLC,
+    _In_ QWORD fOption,
+    _In_ QWORD qwValue
+);
+
+/*
+* Execute a command and retrieve a result (if any) at the same time.
+* NB! If *ppbDataOut contains a memory allocation on exit this should be free'd
+*     by calling LcMemFree().
+* CALLER LcFreeMem: *ppbDataOut
+* -- hLC
+* -- fCommand = LC_CMD_*
+* -- cbDataIn
+* -- pbDataIn
+* -- ppbDataOut
+* -- pcbDataOut
+*/
+_Success_(return)
+EXPORTED_FUNCTION BOOL LcCommand(
+    _In_ HANDLE hLC,
+    _In_ QWORD fCommand,
+    _In_ DWORD cbDataIn,
+    _In_reads_opt_(cbDataIn) PBYTE pbDataIn,
+    _Out_opt_ PBYTE *ppbDataOut,
+    _Out_opt_ PDWORD pcbDataOut
+);
+
 #define LC_OPT_CORE_PRINTF_ENABLE                   0x4000000100000000  // RW
 #define LC_OPT_CORE_VERBOSE                         0x4000000200000000  // RW
 #define LC_OPT_CORE_VERBOSE_EXTRA                   0x4000000300000000  // RW
@@ -309,6 +368,8 @@ EXPORTED_FUNCTION BOOL LcWrite(
 #define LC_OPT_CORE_VERSION_MINOR                   0x4000000600000000  // R
 #define LC_OPT_CORE_VERSION_REVISION                0x4000000700000000  // R
 #define LC_OPT_CORE_ADDR_MAX                        0x1000000800000000  // R
+#define LC_OPT_CORE_STATISTICS_CALL_COUNT           0x4000000900000000  // R [lo-dword: LC_STATISTICS_ID_*]
+#define LC_OPT_CORE_STATISTICS_CALL_TIME            0x4000000a00000000  // R [lo-dword: LC_STATISTICS_ID_*]
 
 #define LC_OPT_MEMORYINFO_VALID                     0x0200000100000000  // R
 #define LC_OPT_MEMORYINFO_FLAG_32BIT                0x0200000300000000  // R
@@ -341,27 +402,37 @@ EXPORTED_FUNCTION BOOL LcWrite(
 #define LC_OPT_FPGA_VERSION_MINOR                   0x0300008300000000  // R
 #define LC_OPT_FPGA_ALGO_TINY                       0x0300008400000000  // RW - 1/0 use tiny 128-byte/tlp read algorithm.
 #define LC_OPT_FPGA_ALGO_SYNCHRONOUS                0x0300008500000000  // RW - 1/0 use synchronous (old) read algorithm.
+#define LC_OPT_FPGA_CFGSPACE_XILINX                 0x0300008600000000  // RW - [lo-dword: register address in bytes] [bytes: 0-3: data, 4-7: byte_enable(if wr/set); top bit = cfg_mgmt_wr_rw1c_as_rw]
+#define LC_OPT_FPGA_TLP_READ_CB_WITHINFO            0x0300009000000000  // RW - 1/0 call TLP read callback with additional string info in szInfo
+#define LC_OPT_FPGA_TLP_READ_CB_FILTERCPL           0x0300009100000000  // RW - 1/0 call TLP read callback with memory read completions from read calls filtered
+#define LC_OPT_FPGA_TLP_READ_CB_BACKGROUND_THREAD   0x0300009200000000  // RW - 1/0 call TLP read callback auto-read with background thread [requires active callback function]
 
-#define LC_CMD_FPGA_WRITE_TLP                       0x0000010100000000  // R
-#define LC_CMD_FPGA_LISTEN_TLP                      0x0000010200000000  // R
+#define LC_CMD_FPGA_WRITE_TLP                       0x0000010100000000  // R  - !!! DEPRECATED DO NOT USE !!! - USE LC_CMD_FPGA_TLP_WRITE_SINGLE!
+#define LC_CMD_FPGA_LISTEN_TLP                      0x0000010200000000  // R  - !!! DEPRECATED DO NOT USE !!!
 #define LC_CMD_FPGA_PCIECFGSPACE                    0x0000010300000000  // R
 #define LC_CMD_FPGA_CFGREGPCIE                      0x0000010400000000  // RW - [lo-dword: register address]
 #define LC_CMD_FPGA_CFGREGCFG                       0x0000010500000000  // RW - [lo-dword: register address]
 #define LC_CMD_FPGA_CFGREGDRP                       0x0000010600000000  // RW - [lo-dword: register address]
 #define LC_CMD_FPGA_CFGREGCFG_MARKWR                0x0000010700000000  // W  - write with mask [lo-dword: register address] [bytes: 0-1: data, 2-3: mask]
 #define LC_CMD_FPGA_CFGREGPCIE_MARKWR               0x0000010800000000  // W  - write with mask [lo-dword: register address] [bytes: 0-1: data, 2-3: mask]
-#define LC_CMD_FPGA_PCIECFGSPACE_WR                 0x0000010900000000  // W
 #define LC_CMD_FPGA_CFGREG_DEBUGPRINT               0x0000010a00000000  // N/A
 #define LC_CMD_FPGA_PROBE                           0x0000010b00000000  // RW
+#define LC_CMD_FPGA_CFGSPACE_SHADOW_RD              0x0000010c00000000  // R
+#define LC_CMD_FPGA_CFGSPACE_SHADOW_WR              0x0000010d00000000  // W  - [lo-dword: config space write base address]
+#define LC_CMD_FPGA_TLP_WRITE_SINGLE                0x0000011000000000  // R  - write single tlp BYTE:s
+#define LC_CMD_FPGA_TLP_WRITE_MULTIPLE              0x0000011100000000  // R  - write multiple LC_TLP:s
+#define LC_CMD_FPGA_TLP_TOSTRING                    0x0000011200000000  // RW - convert single TLP to LPSTR; *pcbDataOut includes NULL terminator.
+#define LC_CMD_FPGA_TLP_READ_FUNCTION_CALLBACK      0x0000011300000000  // W  - set/unset custom TLP read callback function and fetch TLPs (pbDataIn == PLC_TLP_CALLBACK).
 
 #define LC_CMD_FILE_DUMPHEADER_GET                  0x0000020100000000  // R
 
 #define LC_CMD_STATISTICS_GET                       0x4000010000000000  // R
-#define LC_CMD_MEMMAP_GET                           0x4000020000000000  // R
-#define LC_CMD_MEMMAP_SET                           0x4000030000000000  // W
+#define LC_CMD_MEMMAP_GET                           0x4000020000000000  // R  - MEMMAP as LPSTR
+#define LC_CMD_MEMMAP_SET                           0x4000030000000000  // W  - MEMMAP as LPSTR
+#define LC_CMD_MEMMAP_GET_STRUCT                    0x4000040000000000  // R  - MEMMAP as LC_MEMMAP_ENTRY[]
 
 #define LC_CMD_AGENT_EXEC_PYTHON                    0x8000000100000000  // RW - [lo-dword: optional timeout in ms]
-#define LC_CMD_AGENT_EXIT_PROCESS                   0x8000000200000000  // N/A - [lo-dword: process exit code]
+#define LC_CMD_AGENT_EXIT_PROCESS                   0x8000000200000000  //    - [lo-dword: process exit code]
 
 #define LC_STATISTICS_VERSION                       0xe1a10002
 #define LC_STATISTICS_ID_OPEN                       0x00
@@ -395,56 +466,35 @@ typedef struct tdLC_STATISTICS {
     } Call[LC_STATISTICS_ID_MAX + 1];
 } LC_STATISTICS, *PLC_STATISTICS;
 
-/*
-* Set an option as defined by LC_OPT_*.  (R option).
-* -- hLC
-* -- fOption
-* -- cbData
-* -- pbData
-* -- pcbData
-*/
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcGetOption(
-    _In_ HANDLE hLC,
-    _In_ QWORD fOption,
-    _Out_ PQWORD pqwValue
-);
+typedef struct tdLC_MEMMAP_ENTRY {
+    QWORD pa;
+    QWORD cb;
+    QWORD paRemap;
+} LC_MEMMAP_ENTRY, *PLC_MEMMAP_ENTRY;
+
+typedef struct tdLC_TLP {
+    DWORD cb;
+    DWORD _Reserved1;
+    PBYTE pb;
+} LC_TLP, *PLC_TLP;
 
 /*
-* Get an option as defined by LC_OPT_*.  (W option).
-* -- hLC
-* -- fOption
-* -- cbData
-* -- pbData
+* Custom FPGA-only callback function to be called whenever a TLP is received if
+* set by command LC_CMD_FPGA_TLP_READ_FUNCTION_CALLBACK.
+* NOTE! CALLBACK FUNCTION MUST NEVER CALL LEECHCORE DUE TO RISK OF DEADLOCK!
 */
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcSetOption(
-    _In_ HANDLE hLC,
-    _In_ QWORD fOption,
-    _In_ QWORD qwValue
+typedef VOID(*PLC_TLP_READ_FUNCTION_CALLBACK)(
+    _In_opt_ PVOID ctx,
+    _In_ DWORD cbTlp,
+    _In_ PBYTE pbTlp,
+    _In_opt_ DWORD cbInfo,
+    _In_opt_ LPSTR szInfo
 );
 
-/*
-* Execute a command and retrieve a result (if any) at the same time.
-* NB! If *ppbDataOut contains a memory allocation on exit this should be free'd
-*     by calling LcMemFree().
-* CALLER LcFreeMem: *ppbDataOut
-* -- hLC
-* -- fOption
-* -- cbDataIn
-* -- pbDataIn
-* -- ppbDataOut
-* -- pcbDataOut
-*/
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcCommand(
-    _In_ HANDLE hLC,
-    _In_ QWORD fOption,
-    _In_ DWORD cbDataIn,
-    _In_reads_opt_(cbDataIn) PBYTE pbDataIn,
-    _Out_opt_ PBYTE *ppbDataOut,
-    _Out_opt_ PDWORD pcbDataOut
-);
+typedef struct tdLC_TLP_CALLBACK {
+    PVOID ctx;
+    PLC_TLP_READ_FUNCTION_CALLBACK pfn;
+} LC_TLP_CALLBACK, *PLC_TLP_CALLBACK;
 
 #ifdef __cplusplus
 }
