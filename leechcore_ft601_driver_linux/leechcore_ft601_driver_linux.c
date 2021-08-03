@@ -11,7 +11,10 @@
 __attribute__((visibility("default")))
 uint32_t FT_Create(void *pvArg, uint32_t dwFlags, void **pftHandle)
 {
-    int i, rc;
+    int rc;
+
+#ifndef MACOS
+    int i;
     // first try kernel driver
     {
         // NB! underlying driver will create a device object at /dev/ft60x[0-3]
@@ -26,6 +29,7 @@ uint32_t FT_Create(void *pvArg, uint32_t dwFlags, void **pftHandle)
             }
         }
     }
+#endif /* MACOS */
     // try libusb built-in driver
     {
         rc = fpga_open();

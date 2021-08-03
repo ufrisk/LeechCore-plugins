@@ -1,5 +1,16 @@
 CC=gcc
-CFLAGS  += -I. -D LINUX -shared -fPIC -fvisibility=hidden `pkg-config libusb-1.0 --libs --cflags`
+CFLAGS  += -I. -shared -fPIC -fvisibility=hidden `pkg-config libusb-1.0 --libs --cflags`
+
+ifeq ($(shell uname), Linux)
+CFLAGS  += -D LINUX
+LIB = leechcore_ft601_driver_linux.so
+endif
+ifeq ($(shell uname), Darwin)
+LIB = leechcore_ft601_driver_linux.dylib
+CFLAGS  += -D MACOS -install_name @loader_path/$(LIB)
+endif
+
+
 LDFLAGS += -g -shared
 DEPS = leechcore_ft601_driver_linux.h
 OBJ = fpga_libusb.o leechcore_ft601_driver_linux.o
@@ -8,10 +19,10 @@ OBJ = fpga_libusb.o leechcore_ft601_driver_linux.o
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 leechcore_ft601_driver_linux: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) -o leechcore_ft601_driver_linux.so $(LDFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) -o $(LIB) $(LDFLAGS)
 	rm *.o
 	mkdir -p ../files
-	mv leechcore_ft601_driver_linux.so ../files/
+	mv $(LIB) ../files/
 	true
 
 clean:
