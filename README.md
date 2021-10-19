@@ -85,7 +85,6 @@ Place leechcore_device_sp605tcp.[so|dll] alongside leechcore.[so|dll].
 ## leechcore_device_microvmi
 
 #### Authors
-- Ulf Frisk
 - Mathieu Tarral ([@mtarral](https://github.com/mtarral)) - [ANSSI](https://www.ssi.gouv.fr/)
 
 #### Supported Platforms
