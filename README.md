@@ -123,7 +123,7 @@ Parameters:
 ./memprocfs -mount xxx -device 'microvmi://vm_name=win10&kvm_unix_socket=/tmp/introspector'
 ~~~
 
-##### VirtualBox
+##### VirtualBox ([IceBox](https://github.com/thalium/icebox))
 
 Parameters:
 - `vm_name`: name of the VM
