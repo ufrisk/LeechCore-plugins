@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: clang-format
+        run: clang-format --style=file leechcore_device_microvmi/*.[ch]
+
+  lint:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install latest libmicrovmi package
+        run: |
+          curl -s https://api.github.com/repos/Wenzel/libmicrovmi/releases/latest | jq -r '.assets[].browser_download_url' | wget -qi - -O microvmi.deb
+          sudo dpkg -i microvmi.deb
+          rm microvmi.deb
+
+      - name: install clang tools s12
+        run: sudo apt install clang-tools-12
+
+      - name: lint with clang static analyzer
+        run: scan-build-12 --status-bugs make -C leechcore_device_microvmi
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install latest libmicrovmi package
+        run: |
+          curl -s https://api.github.com/repos/Wenzel/libmicrovmi/releases/latest | jq -r '.assets[].browser_download_url' | wget -qi - -O microvmi.deb
+          sudo dpkg -i microvmi.deb
+          rm microvmi.deb
+
+      - name: compile microvmi LeechCore device plugin
+        run: make -C leechcore_device_microvmi
