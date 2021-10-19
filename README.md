@@ -4,7 +4,13 @@ This repository contains various plugins for [LeechCore - Physical Memory Acquis
 
 Plugins are related to various kinds of device drivers allowing for modular extensive memory acquisition in various scenarios.
 
+## Table of Contents
 
+- [leechcore_ft601_driver_linux](#leechcore_ft601_driver_linux)
+- [leechcore_device_hvsavedstate](#leechcore_device_hvsavedstate)
+- [leechcore_device_rawtcp](#leechcore_device_rawtcp)
+- [leechcore_device_sp605tcp](#leechcore_device_sp605tcp)
+- [leechcore_device_microvmi](#leechcore_device_microvmi)
 
 ## leechcore_ft601_driver_linux
 
@@ -76,3 +82,63 @@ Allows LeechCore to connect to a SP605 FPGA board exposing a TCP server on its n
 Place leechcore_device_sp605tcp.[so|dll] alongside leechcore.[so|dll].
 
 
+## leechcore_device_microvmi
+
+#### Authors
+- Ulf Frisk
+- Mathieu Tarral ([@mtarral](https://github.com/mtarral)) - [ANSSI](https://www.ssi.gouv.fr/)
+
+#### Supported Platforms
+- Linux
+
+#### Overview
+
+Allows LeechCore to peek into the live physical memory of virtual machines
+supported by [libmicrovmi](https://wenzel.github.io/libmicrovmi/reference/drivers.html)
+
+#### Requirements
+
+- [libmicrovmi](https://github.com/Wenzel/libmicrovmi): see the [documentation](https://wenzel.github.io/libmicrovmi/tutorial/installation.html)
+
+#### Plugin documentation
+
+- URL device syntax: `microvmi://param1=value1&param2=value2`
+- Debugging: `export RUST_LOG=debug`
+
+##### Xen
+
+Parameters:
+- `vm_name`: name of the VM
+
+~~~
+sudo -E ./memprocfs -mount xxx -device 'microvmi://vm_name=win10'
+~~~
+
+##### KVM
+
+Parameters:
+- `vm_name`: name of the VM
+- `kvm_unix_socket`: KVMi UNIX socket  (see KVM-VMI project)
+
+~~~
+./memprocfs -mount xxx -device 'microvmi://vm_name=win10&kvm_unix_socket=/tmp/introspector'
+~~~
+
+##### VirtualBox
+
+Parameters:
+- `vm_name`: name of the VM
+
+~~~
+./memprocfs -mount xxx -device 'microvmi://vm_name=win10'
+~~~
+
+##### QEMU
+
+Parameters:
+- `memflow_connector_name`: `qemu_procfs`
+- `vm_name` (optional): name of the VM
+
+~~~
+sudo -E ./memprocfs -mount xxx -device 'microvmi://memflow_connector_name=qemu_procfs'
+~~~
