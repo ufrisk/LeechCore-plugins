@@ -149,12 +149,12 @@ int fpga_open(void)
         goto out_free;
     }
 
-    err = libusb_reset_device(device_handle);
-    if(err != 0) {
-        vprintfv("[-] Cannot reset device: %s\n", libusb_strerror(err));
-        rc = -1;
-        goto out_free;
-    }
+    //err = libusb_reset_device(device_handle);
+    //if(err != 0) {
+    //    vprintfv("[-] Cannot reset device: %s\n", libusb_strerror(err));
+    //    rc = -1;
+    //    goto out_free;
+    //}
 
     err = libusb_get_string_descriptor_ascii(device_handle, desc.iManufacturer, string, sizeof(string));
     if(err > 0) {

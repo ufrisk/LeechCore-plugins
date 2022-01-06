@@ -4,9 +4,9 @@
 #endif
 
 #define VERSION_MAJOR               2
-#define VERSION_MINOR               8
-#define VERSION_REVISION            0
-#define VERSION_BUILD               34
+#define VERSION_MINOR               10
+#define VERSION_REVISION            5
+#define VERSION_BUILD               44
 
 #define VER_FILE_DESCRIPTION_STR    "LeechCorePlugin : RAWTCP"
 #define VER_FILE_VERSION            VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD
