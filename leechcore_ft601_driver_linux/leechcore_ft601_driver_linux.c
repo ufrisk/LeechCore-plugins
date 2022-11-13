@@ -62,9 +62,9 @@ __attribute__((visibility("default")))
 uint32_t FT_SetChipConfiguration(void *ftHandle, void *pvConfiguration)
 {
     if(ftHandle == FT601_HANDLE_LIBUSB) {
-        return ioctl((int)(uint64_t)ftHandle, 1, pvConfiguration) ? 0x20 : 0;
-    } else {
         return (fpga_set_chip_configuration(pvConfiguration) == -1) ? 0x20 : 0;
+    } else {
+        return ioctl((int)(uint64_t)ftHandle, 1, pvConfiguration) ? 0x20 : 0;
     }
 }
 
