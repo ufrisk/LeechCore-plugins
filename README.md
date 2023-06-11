@@ -159,6 +159,26 @@ Parameters:
 - `path`: `filename` of shared memory file in /dev/xxxx
 - `size`:  size of the virtual machine ram
 
+##### QEMU Virtual machine setup
+
+To enable the memory backend on our virtual machine, we need to add the memory-backend-object to our command line.
+
+1. Add the memory-backend-object to the command line 
+
+```
+ memory-backend-file,id=mem,size=512M,mem-path=/dev/shm/qemu-ram,share=on
+```
+
+2. Launch the virtual machine
+
+~~~
+ qemu-system-x86_64 -kernel vmlinuz.x86_64 -m 512  -drive format=raw,file=debian.img,if=virtio,aio=native,cache.direct=on, \
+                    -enable-kvm -append "root=/dev/mapper/cl-root console=ttyS0 earlyprintk=serial,ttyS0,115200 nokaslr" \ 
+                    -initrd initramfs.x86_64.img \
+                    -object memory-backend-file,id=mem,size=512M,mem-path=/dev/shm/qemu-ram,share=on
+
+~~~
+
 ##### PCILeech
 ~~~
 ./pcileech -device 'qemu://path=qemu-ram&size=512' write -min 0x12345678 -in 0xdeadcafe
