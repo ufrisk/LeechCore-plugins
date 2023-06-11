@@ -11,6 +11,8 @@ Plugins are related to various kinds of device drivers allowing for modular exte
 - [leechcore_device_rawtcp](#leechcore_device_rawtcp)
 - [leechcore_device_sp605tcp](#leechcore_device_sp605tcp)
 - [leechcore_device_microvmi](#leechcore_device_microvmi)
+- [leechcore_device_mic](#leechcore_device_microvmi)
+- [leechcore_device_qemu](#leechcore_device_qemu)
 
 ## leechcore_ft601_driver_linux
 
@@ -141,3 +143,31 @@ Parameters:
 ~~~
 sudo -E ./memprocfs -mount xxx -device 'microvmi://memflow_connector_name=qemu_procfs'
 ~~~
+
+
+## leechcore_device_qemu
+
+#### Authors:
+- Mathieu Renard - www.h2lab.org
+
+#### Supported Platforms:
+- Linux
+
+#### Overview:
+
+Parameters:
+- `path`: `filename` of shared memory file in /dev/xxxx
+- `size`:  size of the virtual machine ram
+
+##### PCILeech
+~~~
+./pcileech -device 'qemu://path=qemu-ram&size=512' write -min 0x12345678 -in 0xdeadcafe
+~~~
+
+##### Memprocfs
+~~~
+sudo -E ./memprocfs -mount xxx -device 'qemu://path=qemu-ram&size=512'
+~~~
+
+
+
