@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30011.22
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leechcore_device_hvsavedstate", "leechcore_device_hvsavedstate\leechcore_device_hvsavedstate.vcxproj", "{7826D59A-9628-4000-9224-546076BE9213}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -22,6 +22,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leechcore_device_sp605tcp", "leechcore_device_sp605tcp\leechcore_device_sp605tcp.vcxproj", "{06F06E97-8A9B-499A-B90B-F11AE8DA3A40}"
 	ProjectSection(ProjectDependencies) = postProject
 		{EBFBB935-6665-4257-9378-8A548CD665AD} = {EBFBB935-6665-4257-9378-8A548CD665AD}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "leechcore_device_microvmi", "leechcore_device_microvmi", "{C571793B-43B0-456F-BDBB-29CDF696AE19}"
+	ProjectSection(SolutionItems) = preProject
+		leechcore_device_microvmi\leechcore_device_microvmi.c = leechcore_device_microvmi\leechcore_device_microvmi.c
+		leechcore_device_microvmi\Makefile = leechcore_device_microvmi\Makefile
 	EndProjectSection
 EndProject
 Global
