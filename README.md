@@ -11,7 +11,6 @@ Plugins are related to various kinds of device drivers allowing for modular exte
 - [leechcore_device_rawtcp](#leechcore_device_rawtcp)
 - [leechcore_device_sp605tcp](#leechcore_device_sp605tcp)
 - [leechcore_device_microvmi](#leechcore_device_microvmi)
-- [leechcore_device_mic](#leechcore_device_microvmi)
 - [leechcore_device_qemu](#leechcore_device_qemu)
 
 ## leechcore_ft601_driver_linux
