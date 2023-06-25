@@ -1,8 +1,8 @@
 CC=gcc
 # -Wno-unused-variable -> unused variable in leechcore.h
 CFLAGS  += -I. -I../includes -D LINUX -shared -fPIC -fvisibility=hidden -g -Wall -Werror -Wextra -Wno-unused-variable
-LDFLAGS += -shared 
-OBJ = qemu_driver.o leechcore_device_qemu.o
+LDFLAGS += -shared -lrt
+OBJ = leechcore_device_qemu.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)

@@ -155,10 +155,12 @@ sudo -E ./memprocfs -mount xxx -device 'microvmi://memflow_connector_name=qemu_p
 #### Overview:
 
 Parameters:
-- `path`: `filename` of shared memory file in /dev/xxxx
-- `size`:  size of the virtual machine ram
+- `shm`: `filename` of shared memory file in /dev/shm/xxxx
+- `qmp`: `path` to optional qmp socket (used to query vm memory ranges).
 
 ##### QEMU Virtual machine setup
+
+**Also see the more extensive [QEMU documentation in the LeechCore Wiki](https://github.com/ufrisk/LeechCore/wiki/Device_QEMU).**
 
 To enable the memory backend on our virtual machine, we need to add the memory-backend-object to our command line.
 
@@ -174,18 +176,20 @@ To enable the memory backend on our virtual machine, we need to add the memory-b
  qemu-system-x86_64 -kernel vmlinuz.x86_64 -m 512  -drive format=raw,file=debian.img,if=virtio,aio=native,cache.direct=on, \
                     -enable-kvm -append "root=/dev/mapper/cl-root console=ttyS0 earlyprintk=serial,ttyS0,115200 nokaslr" \ 
                     -initrd initramfs.x86_64.img \
-                    -object memory-backend-file,id=mem,size=512M,mem-path=/dev/shm/qemu-ram,share=on
+                    -object memory-backend-file,id=mem,size=512M,mem-path=/dev/shm/qemu-ram,share=on \
+					-machine memory-backend=mem \
+					-qmp unix:/tmp/qmp.sock
 
 ~~~
 
 ##### PCILeech
 ~~~
-./pcileech -device 'qemu://path=qemu-ram&size=512' write -min 0x12345678 -in 0xdeadcafe
+./pcileech -device 'qemu://shm=qemu-ram' write -min 0x12345678 -in 0xdeadcafe
 ~~~
 
 ##### Memprocfs
 ~~~
-sudo -E ./memprocfs -mount xxx -device 'qemu://path=qemu-ram&size=512'
+sudo -E ./memprocfs -mount xxx -device 'qemu://shm=qemu-ram,qmp=/tmp/qmp.sock'
 ~~~
 
 
