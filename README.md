@@ -174,11 +174,10 @@ To enable the memory backend on our virtual machine, we need to add the memory-b
 
 ~~~
  qemu-system-x86_64 -kernel vmlinuz.x86_64 -m 512  -drive format=raw,file=debian.img,if=virtio,aio=native,cache.direct=on, \
-                    -enable-kvm -append "root=/dev/mapper/cl-root console=ttyS0 earlyprintk=serial,ttyS0,115200 nokaslr" \ 
+                    -enable-kvm -append "root=/dev/mapper/cl-root console=ttyS0 earlyprintk=serial,ttyS0,115200 nokaslr"   \ 
                     -initrd initramfs.x86_64.img \
                     -object memory-backend-file,id=mem,size=512M,mem-path=/dev/shm/qemu-ram,share=on \
-					-machine memory-backend=mem \
-					-qmp unix:/tmp/qmp.sock
+                    -qmp unix:/tmp/qmp.sock,server,nowait
 
 ~~~
 
