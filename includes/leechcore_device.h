@@ -15,7 +15,7 @@
 // device may be created/opened - if only one instance may be open at the same
 // time this should be handled by the plugin module itself.
 //
-// (c) Ulf Frisk, 2020-2022
+// (c) Ulf Frisk, 2020-2023
 // Author: Ulf Frisk, pcileech@frizk.net
 //
 // Header Version: 2.5
@@ -40,6 +40,8 @@ typedef struct tdCRITICAL_SECTION {
 
 #define LC_CONTEXT_VERSION                  0xc0e10004
 #define LC_DEVICE_PARAMETER_MAX_ENTRIES     0x10
+
+#define LC_MEMMAP_FORCE_OFFSET              0x8000000000000000
 
 typedef struct tdLC_DEVICE_PARAMETER_ENTRY {
     CHAR szName[MAX_PATH];

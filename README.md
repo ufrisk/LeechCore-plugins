@@ -9,7 +9,6 @@ Plugins are related to various kinds of device drivers allowing for modular exte
 - [leechcore_ft601_driver_linux](#leechcore_ft601_driver_linux)
 - [leechcore_device_hvsavedstate](#leechcore_device_hvsavedstate)
 - [leechcore_device_rawtcp](#leechcore_device_rawtcp)
-- [leechcore_device_sp605tcp](#leechcore_device_sp605tcp)
 - [leechcore_device_microvmi](#leechcore_device_microvmi)
 - [leechcore_device_qemu](#leechcore_device_qemu)
 
@@ -65,22 +64,6 @@ Allows LeechCore to connect to a "raw tcp" server which may be used to perform D
 #### Installation instructions:
 Place leechcore_device_rawtcp.[so|dll] alongside leechcore.[so|dll].
 
-
-
-## leechcore_device_sp605tcp
-
-#### Authors:
-- Ulf Frisk
-- Dmytro Oleksiuk
-
-#### Supported Platforms:
-- Windows, Linux
-
-#### Overview:
-Allows LeechCore to connect to a SP605 FPGA board exposing a TCP server on its network interface as described in the blog post by Dmytro. Requires a SP605 board flashed with the bitstream by [@d_olex](https://twitter.com/d_olex) as described in the following [README and Github project](https://github.com/Cr4sh/s6_pcie_microblaze).
-
-#### Installation instructions:
-Place leechcore_device_sp605tcp.[so|dll] alongside leechcore.[so|dll].
 
 
 ## leechcore_device_microvmi

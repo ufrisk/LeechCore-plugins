@@ -11,10 +11,10 @@
 // - README: https://github.com/ufrisk/LeechCore
 // - GUIDE:  https://github.com/ufrisk/LeechCore/wiki
 //
-// (c) Ulf Frisk, 2020-2022
+// (c) Ulf Frisk, 2020-2023
 // Author: Ulf Frisk, pcileech@frizk.net
 //
-// Header Version: 2.9.1
+// Header Version: 2.16.1
 //
 
 #ifndef __LEECHCORE_H__
@@ -53,6 +53,8 @@ typedef uint16_t                            WCHAR, *PWCHAR, *LPWSTR, *LPCWSTR;
 #define _In_z_
 #define _In_opt_
 #define _In_reads_(x)
+#define _In_reads_bytes_(x)
+#define _In_reads_bytes_opt_(x)
 #define _In_reads_opt_(x)
 #define _Inout_
 #define _Inout_bytecount_(x)
@@ -98,8 +100,8 @@ typedef struct LC_CONFIG {
     // below are set by caller
     DWORD dwVersion;                        // must equal LC_CREATE_VERSION
     DWORD dwPrintfVerbosity;                // printf verbosity according to LC_PRINTF_*
-    CHAR szDevice[MAX_PATH];                // device connection string - see wiki for additional info.
-    CHAR szRemote[MAX_PATH];                // remote connection striLC_CONFIG_VERSIONng - see wiki for additional info.
+    CHAR szDevice[MAX_PATH];                // device configuration - see wiki for additional info.
+    CHAR szRemote[MAX_PATH];                // remote configuration - see wiki for additional info.
     _Check_return_opt_ int(*pfn_printf_opt)(_In_z_ _Printf_format_string_ char const *const _Format, ...);
     // below are set by caller, updated by LeecCore
     QWORD paMax;                            // max physical address (disables any max address auto-detect).
@@ -130,13 +132,13 @@ typedef struct tdLC_CONFIG_ERRORINFO {
 *       free'd by a call to LcMemFree().
 * -- return
 */
-_Success_(return != NULL)
-EXPORTED_FUNCTION HANDLE LcCreate(
+EXPORTED_FUNCTION _Success_(return != NULL)
+HANDLE LcCreate(
     _Inout_ PLC_CONFIG pLcCreateConfig
 );
 
-_Success_(return != NULL)
-EXPORTED_FUNCTION HANDLE LcCreateEx(
+EXPORTED_FUNCTION _Success_(return != NULL)
+HANDLE LcCreateEx(
     _Inout_ PLC_CONFIG pLcCreateConfig,
     _Out_opt_ PPLC_CONFIG_ERRORINFO ppLcCreateErrorInfo
 );
@@ -144,7 +146,8 @@ EXPORTED_FUNCTION HANDLE LcCreateEx(
 /*
 * Close a LeechCore handle and free any resources no longer needed.
 */
-EXPORTED_FUNCTION VOID LcClose(
+EXPORTED_FUNCTION
+VOID LcClose(
     _In_opt_ _Post_ptr_invalid_ HANDLE hLC
 );
 
@@ -182,10 +185,10 @@ typedef struct tdMEM_SCATTER {
 #define MEM_SCATTER_ADDR_INVALID            ((QWORD)-1)
 #define MEM_SCATTER_ADDR_ISINVALID(pMEM)    (pMEM->qwA == (QWORD)-1)
 #define MEM_SCATTER_ADDR_ISVALID(pMEM)      (pMEM->qwA != (QWORD)-1)
-#define MEM_SCATTER_STACK_PUSH(pMEM, v)     (pMEM->vStack[pMEM->iStack++] = (QWORD)v)
+#define MEM_SCATTER_STACK_PUSH(pMEM, v)     (pMEM->vStack[pMEM->iStack++] = (QWORD)(v))
 #define MEM_SCATTER_STACK_PEEK(pMEM, i)     (pMEM->vStack[pMEM->iStack - i])
-#define MEM_SCATTER_STACK_SET(pMEM, i, v)   (pMEM->vStack[pMEM->iStack - i] = (QWORD)v)
-#define MEM_SCATTER_STACK_ADD(pMEM, i, v)   (pMEM->vStack[pMEM->iStack - i] += (QWORD)v)
+#define MEM_SCATTER_STACK_SET(pMEM, i, v)   (pMEM->vStack[pMEM->iStack - i] = (QWORD)(v))
+#define MEM_SCATTER_STACK_ADD(pMEM, i, v)   (pMEM->vStack[pMEM->iStack - i] += (QWORD)(v))
 #define MEM_SCATTER_STACK_POP(pMEM)         (pMEM->vStack[--pMEM->iStack])
 
 /*
@@ -193,7 +196,8 @@ typedef struct tdMEM_SCATTER {
 * LcAllocScatter / LcCommand functions.
 * -- pv
 */
-EXPORTED_FUNCTION VOID LcMemFree(
+EXPORTED_FUNCTION
+VOID LcMemFree(
     _Frees_ptr_opt_ PVOID pv
 );
 
@@ -204,8 +208,8 @@ EXPORTED_FUNCTION VOID LcMemFree(
 * -- pppMEMs = pointer to receive ppMEMs
 * -- return
 */
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcAllocScatter1(
+EXPORTED_FUNCTION _Success_(return)
+BOOL LcAllocScatter1(
     _In_ DWORD cMEMs,
     _Out_ PPMEM_SCATTER *pppMEMs
 );
@@ -220,8 +224,8 @@ EXPORTED_FUNCTION BOOL LcAllocScatter1(
 * -- pppMEMs = pointer to receive ppMEMs
 * -- return
 */
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcAllocScatter2(
+EXPORTED_FUNCTION _Success_(return)
+BOOL LcAllocScatter2(
     _In_ DWORD cbData,
     _Inout_updates_opt_(cbData) PBYTE pbData,
     _In_ DWORD cMEMs,
@@ -239,8 +243,8 @@ EXPORTED_FUNCTION BOOL LcAllocScatter2(
 * -- pppMEMs = pointer to receive ppMEMs
 * -- return
 */
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcAllocScatter3(
+EXPORTED_FUNCTION _Success_(return)
+BOOL LcAllocScatter3(
     _Inout_updates_opt_(0x1000) PBYTE pbDataFirstPage,
     _Inout_updates_opt_(0x1000) PBYTE pbDataLastPage,
     _In_ DWORD cbData,
@@ -255,7 +259,8 @@ EXPORTED_FUNCTION BOOL LcAllocScatter3(
 * -- cMEMs
 * -- ppMEMs
 */
-EXPORTED_FUNCTION VOID LcReadScatter(
+EXPORTED_FUNCTION
+VOID LcReadScatter(
     _In_ HANDLE hLC,
     _In_ DWORD cMEMs,
     _Inout_ PPMEM_SCATTER ppMEMs
@@ -270,8 +275,8 @@ EXPORTED_FUNCTION VOID LcReadScatter(
 * -- pb
 * -- return
 */
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcRead(
+EXPORTED_FUNCTION _Success_(return)
+BOOL LcRead(
     _In_ HANDLE hLC,
     _In_ QWORD pa,
     _In_ DWORD cb,
@@ -284,7 +289,8 @@ EXPORTED_FUNCTION BOOL LcRead(
 * -- cMEMs
 * -- ppMEMs
 */
-EXPORTED_FUNCTION VOID LcWriteScatter(
+EXPORTED_FUNCTION
+VOID LcWriteScatter(
     _In_ HANDLE hLC,
     _In_ DWORD cMEMs,
     _Inout_ PPMEM_SCATTER ppMEMs
@@ -298,8 +304,8 @@ EXPORTED_FUNCTION VOID LcWriteScatter(
 * -- pb
 * -- return
 */
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcWrite(
+EXPORTED_FUNCTION _Success_(return)
+BOOL LcWrite(
     _In_ HANDLE hLC,
     _In_ QWORD pa,
     _In_ DWORD cb,
@@ -321,8 +327,8 @@ EXPORTED_FUNCTION BOOL LcWrite(
 * -- pbData
 * -- pcbData
 */
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcGetOption(
+EXPORTED_FUNCTION _Success_(return)
+BOOL LcGetOption(
     _In_ HANDLE hLC,
     _In_ QWORD fOption,
     _Out_ PQWORD pqwValue
@@ -335,8 +341,8 @@ EXPORTED_FUNCTION BOOL LcGetOption(
 * -- cbData
 * -- pbData
 */
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcSetOption(
+EXPORTED_FUNCTION _Success_(return)
+BOOL LcSetOption(
     _In_ HANDLE hLC,
     _In_ QWORD fOption,
     _In_ QWORD qwValue
@@ -354,8 +360,8 @@ EXPORTED_FUNCTION BOOL LcSetOption(
 * -- ppbDataOut
 * -- pcbDataOut
 */
-_Success_(return)
-EXPORTED_FUNCTION BOOL LcCommand(
+EXPORTED_FUNCTION _Success_(return)
+BOOL LcCommand(
     _In_ HANDLE hLC,
     _In_ QWORD fCommand,
     _In_ DWORD cbDataIn,
@@ -374,10 +380,13 @@ EXPORTED_FUNCTION BOOL LcCommand(
 #define LC_OPT_CORE_ADDR_MAX                        0x1000000800000000  // R
 #define LC_OPT_CORE_STATISTICS_CALL_COUNT           0x4000000900000000  // R [lo-dword: LC_STATISTICS_ID_*]
 #define LC_OPT_CORE_STATISTICS_CALL_TIME            0x4000000a00000000  // R [lo-dword: LC_STATISTICS_ID_*]
+#define LC_OPT_CORE_VOLATILE                        0x1000000b00000000  // R
+#define LC_OPT_CORE_READONLY                        0x1000000c00000000  // R
 
 #define LC_OPT_MEMORYINFO_VALID                     0x0200000100000000  // R
 #define LC_OPT_MEMORYINFO_FLAG_32BIT                0x0200000300000000  // R
 #define LC_OPT_MEMORYINFO_FLAG_PAE                  0x0200000400000000  // R
+#define LC_OPT_MEMORYINFO_ARCH                      0x0200001200000000  // R - LC_ARCH_TP
 #define LC_OPT_MEMORYINFO_OS_VERSION_MINOR          0x0200000500000000  // R
 #define LC_OPT_MEMORYINFO_OS_VERSION_MAJOR          0x0200000600000000  // R
 #define LC_OPT_MEMORYINFO_OS_DTB                    0x0200000700000000  // R
@@ -409,10 +418,7 @@ EXPORTED_FUNCTION BOOL LcCommand(
 #define LC_OPT_FPGA_CFGSPACE_XILINX                 0x0300008600000000  // RW - [lo-dword: register address in bytes] [bytes: 0-3: data, 4-7: byte_enable(if wr/set); top bit = cfg_mgmt_wr_rw1c_as_rw]
 #define LC_OPT_FPGA_TLP_READ_CB_WITHINFO            0x0300009000000000  // RW - 1/0 call TLP read callback with additional string info in szInfo
 #define LC_OPT_FPGA_TLP_READ_CB_FILTERCPL           0x0300009100000000  // RW - 1/0 call TLP read callback with memory read completions from read calls filtered
-#define LC_OPT_FPGA_TLP_READ_CB_BACKGROUND_THREAD   0x0300009200000000  // RW - 1/0 call TLP read callback auto-read with background thread [requires active callback function]
 
-#define LC_CMD_FPGA_WRITE_TLP                       0x0000010100000000  // R  - !!! DEPRECATED DO NOT USE !!! - USE LC_CMD_FPGA_TLP_WRITE_SINGLE!
-#define LC_CMD_FPGA_LISTEN_TLP                      0x0000010200000000  // R  - !!! DEPRECATED DO NOT USE !!!
 #define LC_CMD_FPGA_PCIECFGSPACE                    0x0000010300000000  // R
 #define LC_CMD_FPGA_CFGREGPCIE                      0x0000010400000000  // RW - [lo-dword: register address]
 #define LC_CMD_FPGA_CFGREGCFG                       0x0000010500000000  // RW - [lo-dword: register address]
@@ -423,10 +429,19 @@ EXPORTED_FUNCTION BOOL LcCommand(
 #define LC_CMD_FPGA_PROBE                           0x0000010b00000000  // RW
 #define LC_CMD_FPGA_CFGSPACE_SHADOW_RD              0x0000010c00000000  // R
 #define LC_CMD_FPGA_CFGSPACE_SHADOW_WR              0x0000010d00000000  // W  - [lo-dword: config space write base address]
-#define LC_CMD_FPGA_TLP_WRITE_SINGLE                0x0000011000000000  // R  - write single tlp BYTE:s
-#define LC_CMD_FPGA_TLP_WRITE_MULTIPLE              0x0000011100000000  // R  - write multiple LC_TLP:s
+#define LC_CMD_FPGA_TLP_WRITE_SINGLE                0x0000011000000000  // W  - write single tlp BYTE:s
+#define LC_CMD_FPGA_TLP_WRITE_MULTIPLE              0x0000011100000000  // W  - write multiple LC_TLP:s
 #define LC_CMD_FPGA_TLP_TOSTRING                    0x0000011200000000  // RW - convert single TLP to LPSTR; *pcbDataOut includes NULL terminator.
-#define LC_CMD_FPGA_TLP_READ_FUNCTION_CALLBACK      0x0000011300000000  // W  - set/unset custom TLP read callback function and fetch TLPs (pbDataIn == PLC_TLP_CALLBACK).
+
+#define LC_CMD_FPGA_TLP_CONTEXT                     0x2000011400000000  // W - set/unset TLP user-defined context to be passed to callback function. (pbDataIn == LPVOID user context). [not remote].
+#define LC_CMD_FPGA_TLP_CONTEXT_RD                  0x2000011b00000000  // R - get TLP user-defined context to be passed to callback function. [not remote].
+#define LC_CMD_FPGA_TLP_FUNCTION_CALLBACK           0x2000011500000000  // W - set/unset TLP callback function (pbDataIn == PLC_TLP_CALLBACK). [not remote].
+#define LC_CMD_FPGA_TLP_FUNCTION_CALLBACK_RD        0x2000011c00000000  // R - get TLP callback function. [not remote].
+#define LC_CMD_FPGA_BAR_CONTEXT                     0x2000012000000000  // W - set/unset BAR user-defined context to be passed to callback function. (pbDataIn == LPVOID user context). [not remote].
+#define LC_CMD_FPGA_BAR_CONTEXT_RD                  0x2000012100000000  // R - get BAR user-defined context to be passed to callback function. [not remote].
+#define LC_CMD_FPGA_BAR_FUNCTION_CALLBACK           0x2000012200000000  // W - set/unset BAR callback function (pbDataIn == PLC_BAR_CALLBACK). [not remote].
+#define LC_CMD_FPGA_BAR_FUNCTION_CALLBACK_RD        0x2000012300000000  // R - get BAR callback function. [not remote].
+#define LC_CMD_FPGA_BAR_INFO                        0x0000012400000000  // R - get BAR info (pbDataOut == LC_BAR_INFO[6]).
 
 #define LC_CMD_FILE_DUMPHEADER_GET                  0x0000020100000000  // R
 
@@ -443,6 +458,8 @@ EXPORTED_FUNCTION BOOL LcCommand(
 #define LC_CMD_AGENT_VFS_WRITE                      0x8000000500000000  // RW
 #define LC_CMD_AGENT_VFS_OPT_GET                    0x8000000600000000  // RW
 #define LC_CMD_AGENT_VFS_OPT_SET                    0x8000000700000000  // RW
+#define LC_CMD_AGENT_VFS_INITIALIZE                 0x8000000800000000  // RW
+#define LC_CMD_AGENT_VFS_CONSOLE                    0x8000000900000000  // RW
 
 #define LC_CMD_AGENT_VFS_REQ_VERSION                0xfeed0001
 #define LC_CMD_AGENT_VFS_RSP_VERSION                0xfeee0001
@@ -507,6 +524,23 @@ typedef struct tdLC_MEMMAP_ENTRY {
     QWORD paRemap;
 } LC_MEMMAP_ENTRY, *PLC_MEMMAP_ENTRY;
 
+typedef enum tdLC_ARCH_TP {
+    LC_ARCH_NA      = 0,
+    LC_ARCH_X86     = 1,
+    LC_ARCH_X86PAE  = 2,
+    LC_ARCH_X64     = 3,
+    LC_ARCH_ARM64   = 4,
+} LC_ARCH_TP;
+
+
+
+//-----------------------------------------------------------------------------
+// RAW TLP READ/WRITE SUPPORT:
+//-----------------------------------------------------------------------------
+
+/*
+* TLP structure to be used with LC_CMD_FPGA_TLP_WRITE_MULTIPLE.
+*/
 typedef struct tdLC_TLP {
     DWORD cb;
     DWORD _Reserved1;
@@ -514,11 +548,11 @@ typedef struct tdLC_TLP {
 } LC_TLP, *PLC_TLP;
 
 /*
-* Custom FPGA-only callback function to be called whenever a TLP is received if
-* set by command LC_CMD_FPGA_TLP_READ_FUNCTION_CALLBACK.
-* NOTE! CALLBACK FUNCTION MUST NEVER CALL LEECHCORE DUE TO RISK OF DEADLOCK!
+* Custom FPGA callback function called when a TLP is received.
+* Callback function set by command LC_CMD_FPGA_TLP_FUNCTION_CALLBACK.
+* User-defined context is set by command: LC_CMD_FPGA_TLP_CONTEXT.
 */
-typedef VOID(*PLC_TLP_READ_FUNCTION_CALLBACK)(
+typedef VOID(*PLC_TLP_FUNCTION_CALLBACK)(
     _In_opt_ PVOID ctx,
     _In_ DWORD cbTlp,
     _In_ PBYTE pbTlp,
@@ -526,10 +560,54 @@ typedef VOID(*PLC_TLP_READ_FUNCTION_CALLBACK)(
     _In_opt_ LPSTR szInfo
 );
 
-typedef struct tdLC_TLP_CALLBACK {
-    PVOID ctx;
-    PLC_TLP_READ_FUNCTION_CALLBACK pfn;
-} LC_TLP_CALLBACK, *PLC_TLP_CALLBACK;
+#define LC_TLP_FUNCTION_CALLBACK_DISABLE        (PLC_TLP_FUNCTION_CALLBACK)(NULL)
+#define LC_TLP_FUNCTION_CALLBACK_DUMMY          (PLC_TLP_FUNCTION_CALLBACK)(-1)
+
+
+
+//-----------------------------------------------------------------------------
+// PCIE BAR SUPPORT:
+//-----------------------------------------------------------------------------
+
+typedef struct tdLC_BAR {
+    BOOL fValid;
+    BOOL fIO;
+    BOOL f64Bit;
+    BOOL fPrefetchable;
+    DWORD _Filler[3];
+    DWORD iBar;
+    QWORD pa;
+    QWORD cb;
+} LC_BAR, *PLC_BAR;
+
+typedef struct tdLC_BAR_REQUEST {
+    PVOID ctx;              // user context (set by command LC_CMD_FPGA_BAR_CONTEXT)
+    PLC_BAR pBar;           // BAR info
+    BYTE bTag;              // TLP tag (0-255)
+    BYTE bFirstBE;          // First byte enable (0-3) [relevant for writes]
+    BYTE bLastBE;           // Last byte enable (0-3) [relevant for writes]
+    BYTE _Filler;
+    BOOL f64;               // 64-bit bar access (false = 32-bit)
+    BOOL fRead;             // BAR read request, called function should update pbData with read data and set fReadReply = TRUE on success.
+    BOOL fReadReply;        // Read success - should be updated by called function upon read success (after updating pbData).
+    BOOL fWrite;            // BAR write request (no reply should be sent, check byte-enables bFirstBE/bLastBE)
+    DWORD cbData;           // number of bytes to read/write
+    QWORD oData;            // data offset in BAR.
+    BYTE pbData[4096];      // bytes to write or read data (to be updated by called function).
+} LC_BAR_REQUEST, *PLC_BAR_REQUEST;
+
+/*
+* Custom FPGA callback function to be called when BAR read/write is received.
+* Callback function set by command LC_CMD_FPGA_BAR_FUNCTION_CALLBACK.
+* User-defined context is set by command: LC_CMD_FPGA_BAR_CONTEXT.
+* Read reply is sent by updating pbData with read data and fReadReply = TRUE.
+* To return Unsupported Request (UR) set fReadReply = FALSE on a MRd request.
+*/
+typedef VOID(*PLC_BAR_FUNCTION_CALLBACK)(_Inout_ PLC_BAR_REQUEST pBarRequest);
+
+#define LC_BAR_FUNCTION_CALLBACK_DISABLE        (PLC_BAR_FUNCTION_CALLBACK)(NULL)
+#define LC_BAR_FUNCTION_CALLBACK_ZEROBAR        (PLC_BAR_FUNCTION_CALLBACK)(-1)
+
 
 #ifdef __cplusplus
 }

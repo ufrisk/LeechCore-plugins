@@ -390,19 +390,19 @@ BOOL DeviceHvSavedState_Init(_In_ PLC_CONTEXT ctxLC, _Inout_ PHVSAVEDSTATE_CONTE
 
     reg.Architecture = ctx->architecture;
     reg.RegisterId = ctx->architecture == Arch_x64 ? X64_RegisterCr3 : X86_RegisterCr3;
-    if(ctx->fn.GetRegisterValue(ctx->hVmSavedStateDumpHandle, vpId, &reg) != S_OK) {
+    if(ctx->fn.GetRegisterValue(ctx->hVmSavedStateDumpHandle, vpId, &reg) == S_OK) {
+        ctx->regCr3 = reg.RegisterValue;
+    } else {
         lcprintfvv_fn(ctxLC, "ERROR: GetPagingMode(Cr3) failed.\n");
-        return FALSE;
     }
-    ctx->regCr3 = reg.RegisterValue;
 
     reg.Architecture = ctx->architecture;
     reg.RegisterId = ctx->architecture == Arch_x64 ? X64_RegisterRip : X86_RegisterEip;
     if(ctx->fn.GetRegisterValue(ctx->hVmSavedStateDumpHandle, vpId, &reg) != S_OK) {
+        ctx->regRip = reg.RegisterValue;
+    } else {
         lcprintfvv_fn(ctxLC, "ERROR: GetPagingMode() failed.\n");
-        return FALSE;
     }
-    ctx->regRip = reg.RegisterValue;
 
     lcprintfv(ctxLC, "[%d] VP Architecture %s\n", vpId, ctx->architecture == Arch_x64 ? "x64" : "x86");
     lcprintfv(ctxLC, "[%d] CR3 0x%I64X\n", vpId, ctx->regCr3);
@@ -412,17 +412,50 @@ BOOL DeviceHvSavedState_Init(_In_ PLC_CONTEXT ctxLC, _Inout_ PHVSAVEDSTATE_CONTE
 }
 
 _Success_(return)
-BOOL DeviceHvSavedState_Open_InitializeDll(PHVSAVEDSTATE_CONTEXT ctx)
+BOOL DeviceHvSavedState_Open_InitializeDll2(PHVSAVEDSTATE_CONTEXT ctx, _In_ LPSTR szDll)
 {
     const LPSTR FN_LIST[] = { "ApplyPendingSavedStateFileReplayLog", "GetArchitecture", "GetGuestPhysicalMemoryChunks", "GetGuestRawSavedMemorySize", "GetPagingMode", "GetRegisterValue", "GetVpCount", "GuestPhysicalAddressToRawSavedMemoryOffset", "GuestVirtualAddressToPhysicalAddress", "LoadSavedStateFile", "LoadSavedStateFiles", "LocateSavedStateFiles", "ReadGuestPhysicalAddress", "ReadGuestRawSavedMemory", "ReleaseSavedStateFiles" };
     DWORD i;
     if(sizeof(ctx->fn) != sizeof(FN_LIST)) { return FALSE; }
-    ctx->hDll = LoadLibraryA("vmsavedstatedumpprovider.dll");
+    ctx->hDll = LoadLibraryA(szDll);
     if(!ctx->hDll) { return FALSE; }
     for(i = 0; i < sizeof(FN_LIST) / sizeof(LPSTR); i++) {
         if(!(*((PQWORD)&ctx->fn + i) = (QWORD)GetProcAddress(ctx->hDll, FN_LIST[i]))) { return FALSE; }
     }
     return TRUE;
+}
+
+int DeviceHvSavedState_Open_InitializeDll_CmpWinBuildNumber(const void *p1, const void *p2)
+{
+    DWORD v1 = *(DWORD*)p1;
+    DWORD v2 = *(DWORD*)p2;
+    return (v2 > v1) - (v2 < v1);
+}
+
+_Success_(return)
+BOOL DeviceHvSavedState_Open_InitializeDll(PHVSAVEDSTATE_CONTEXT ctx)
+{
+    WIN32_FIND_DATAA FindFileData;
+    HANDLE hFindFile = INVALID_HANDLE_VALUE;
+    DWORD i, cBuildNumbers = 0, dwBuildNumbers[0x100];
+    CHAR szDll[MAX_PATH];
+    // 1: try vmsavedstatedumpprovider.dll in memprocfs directory:
+    if(DeviceHvSavedState_Open_InitializeDll2(ctx, "vmsavedstatedumpprovider.dll")) { return TRUE; }
+    // 2: try vmsavedstatedumpprovider.dll from Windows SDK:
+    hFindFile = FindFirstFileA("C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.*", &FindFileData);
+    if(hFindFile == INVALID_HANDLE_VALUE) { return FALSE; }
+    do {
+        // Check if the found entity is a directory
+        if((FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (strlen(FindFileData.cFileName) > 10))  {
+            dwBuildNumbers[cBuildNumbers++] = strtoul(FindFileData.cFileName + 5, NULL, 10);
+        }
+    } while(FindNextFileA(hFindFile, &FindFileData) && (cBuildNumbers < 0x100));
+    qsort(dwBuildNumbers, cBuildNumbers, sizeof(DWORD), DeviceHvSavedState_Open_InitializeDll_CmpWinBuildNumber);
+    for(i = 0; i < cBuildNumbers; i++) {
+        _snprintf_s(szDll, sizeof(szDll), _TRUNCATE, "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.%u.0\\x64\\vmsavedstatedumpprovider.dll", dwBuildNumbers[i]);
+        if(DeviceHvSavedState_Open_InitializeDll2(ctx, szDll)) { return TRUE; }
+    }
+    return FALSE;
 }
 
 _Success_(return)
@@ -431,9 +464,11 @@ BOOL DeviceHvSavedState_GetOption(_In_ PLC_CONTEXT ctxLC, _In_ QWORD fOption, _O
     PHVSAVEDSTATE_CONTEXT ctx = (PHVSAVEDSTATE_CONTEXT)ctxLC->hDevice;
     switch(fOption) {
         case LC_OPT_MEMORYINFO_OS_DTB:
+            if(!ctx->regCr3) { return FALSE; }
             *pqwValue = ctx->regCr3;
             return TRUE;
         case LC_OPT_MEMORYINFO_OS_KERNELHINT:
+            if(!ctx->regRip) { return FALSE; }
             *pqwValue = ctx->regRip;
             return TRUE;
     }
