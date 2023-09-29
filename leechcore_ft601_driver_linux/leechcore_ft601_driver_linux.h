@@ -14,7 +14,7 @@
 // If the LambdaConcept kernel driver is not found on the system this library
 // will use a built-in driver that use libusb in the backend.
 // The libusb driver (fpga_libusb) is:
-//    Contributed by Jérémie Boutoille from Synacktiv - www.synacktiv.com
+//    Contributed by Jï¿½rï¿½mie Boutoille from Synacktiv - www.synacktiv.com
 //    Based in part on PCIeScreamer kernel driver from LambdaConcept.
 //
 // This driver, both kernel driver and built-in libusb backed driver have been
@@ -108,6 +108,26 @@ uint32_t FT_ReadPipeEx(
     uint32_t ulBufferLength,
     uint32_t *pulBytesTransferred,
     void *pOverlapped
+);
+
+__attribute__((visibility("default")))
+uint32_t FT_InitializeOverlapped(
+    void *ftHandle,
+    void *pOverlapped
+);
+
+__attribute__((visibility("default")))
+uint32_t FT_ReleaseOverlapped(
+    void *ftHandle,
+    void *pOverlapped
+);
+
+__attribute__((visibility("default")))
+uint32_t FT_GetOverlappedResult(
+    void *ftHandle,
+    void *pOverlapped,
+    uint32_t *pulBytesTransferred,
+    uint32_t bWait
 );
 
 #ifdef __cplusplus

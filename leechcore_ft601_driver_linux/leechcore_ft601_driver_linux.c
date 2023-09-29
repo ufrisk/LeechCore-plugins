@@ -8,6 +8,11 @@
 #define FT601_HANDLE_LIBUSB         (void*)-2
 #define min(a, b)                   (((a) < (b)) ? (a) : (b))
 
+#define FT_OK                       0
+#define FT_NOT_SUPPORTED            17
+#define FT_IO_PENDING               24
+#define FT_OTHER_ERROR              32
+
 __attribute__((visibility("default")))
 uint32_t FT_Create(void *pvArg, uint32_t dwFlags, void **pftHandle)
 {
@@ -87,7 +92,7 @@ uint32_t FT_WritePipe(void *ftHandle, uint8_t ucPipeID, uint8_t *pucBuffer, uint
 {
     int result, cbTxTotal = 0;
     if(ftHandle == FT601_HANDLE_LIBUSB) {
-        return (fpga_write(pucBuffer, ulBufferLength, pulBytesTransferred) == -1) ? 0x20 : 0;
+        return (fpga_write(pucBuffer, ulBufferLength, (int*)pulBytesTransferred) == -1) ? 0x20 : 0;
     } else {
         // NB! underlying ft60x driver cannot handle more than 0x800 bytes per write,
         //     split larger writes into smaller writes if required.
@@ -127,7 +132,11 @@ uint32_t FT_ReadPipe(void *ftHandle, uint8_t ucPipeID, uint8_t *pucBuffer, uint3
 {
     uint32_t i, result, cbRx, cbRxTotal = 0;
     if(ftHandle == FT601_HANDLE_LIBUSB) {
-        return (fpga_read(pucBuffer, ulBufferLength, pulBytesTransferred) == -1) ? 0x20 : 0;
+        if(pOverlapped) {
+            return (fpga_async_read(pOverlapped, pucBuffer, ulBufferLength) == -1) ? FT_OTHER_ERROR : FT_IO_PENDING;
+        } else {
+            return (fpga_read(pucBuffer, ulBufferLength, (int*)pulBytesTransferred) == -1) ? FT_OTHER_ERROR : FT_OK;   
+        }
     } else {
         // NB! underlying driver won't return all data on the USB core queue in first
         //     read so we have to read two times.
@@ -144,4 +153,34 @@ __attribute__((visibility("default")))
 uint32_t FT_ReadPipeEx(void *ftHandle, uint8_t ucPipeID, uint8_t *pucBuffer, uint32_t ulBufferLength, uint32_t *pulBytesTransferred, void *pOverlapped)
 {
     return FT_ReadPipe(ftHandle, ucPipeID, pucBuffer, ulBufferLength, pulBytesTransferred, pOverlapped);
+}
+
+__attribute__((visibility("default")))
+uint32_t FT_InitializeOverlapped(void *ftHandle, void *pOverlapped)
+{
+    if(ftHandle == FT601_HANDLE_LIBUSB) {
+        return fpga_async_init(pOverlapped) ? FT_OTHER_ERROR : FT_OK;
+    } else {
+        return FT_NOT_SUPPORTED;    // not supported on kernel driver
+    }
+}
+
+__attribute__((visibility("default")))
+uint32_t FT_ReleaseOverlapped(void *ftHandle, void *pOverlapped)
+{
+    if(ftHandle == FT601_HANDLE_LIBUSB) {
+        return fpga_async_close(pOverlapped) ? FT_OTHER_ERROR : FT_OK;
+    } else {
+        return FT_NOT_SUPPORTED;    // not supported on kernel driver
+    }
+}
+
+__attribute__((visibility("default")))
+uint32_t FT_GetOverlappedResult(void *ftHandle, void *pOverlapped, uint32_t *pulBytesTransferred, uint32_t bWait)
+{
+    if(ftHandle == FT601_HANDLE_LIBUSB) {
+        return fpga_async_result(pOverlapped, pulBytesTransferred, bWait) ? FT_OTHER_ERROR : FT_OK;
+    } else {
+        return FT_NOT_SUPPORTED;    // not supported on kernel driver
+    }
 }

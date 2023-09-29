@@ -309,3 +309,165 @@ int fpga_write(void *data, int size, int *transferred)
 
     return 0;
 }
+
+
+
+// ----------------------------------------------------------------------------
+// SRWLock functionality below:
+// ----------------------------------------------------------------------------
+
+#include <stdatomic.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <linux/futex.h>
+
+typedef void                                VOID, *PVOID;
+typedef uint32_t                            BOOL, *PBOOL;
+typedef uint32_t                            DWORD, *PDWORD, ULONG, *PULONG;
+#define TRUE                                1
+#define FALSE                               0
+#define _Inout_
+
+typedef struct tdSRWLOCK {
+    uint32_t xchg;
+    int c;
+} SRWLOCK, *PSRWLOCK;
+VOID AcquireSRWLockExclusive(_Inout_ PSRWLOCK SRWLock);
+VOID ReleaseSRWLockExclusive(_Inout_ PSRWLOCK SRWLock);
+#define SRWLOCK_INIT            { 0 }
+
+static int futex(uint32_t *uaddr, int futex_op, uint32_t val, const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3)
+{
+    return syscall(SYS_futex, uaddr, futex_op, val, timeout, uaddr2, val3);
+}
+
+VOID AcquireSRWLockExclusive(_Inout_ PSRWLOCK SRWLock)
+{
+    DWORD dwZero;
+    __sync_fetch_and_add_4(&SRWLock->c, 1);
+    while(TRUE) {
+        dwZero = 0;
+        if(atomic_compare_exchange_strong(&SRWLock->xchg, &dwZero, 1)) {
+            return;
+        }
+        futex(&SRWLock->xchg, FUTEX_WAIT, 1, NULL, NULL, 0);
+    }
+}
+
+VOID ReleaseSRWLockExclusive(_Inout_ PSRWLOCK SRWLock)
+{
+    DWORD dwOne = 1;
+    if(atomic_compare_exchange_strong(&SRWLock->xchg, &dwOne, 0)) {
+        if(__sync_sub_and_fetch_4(&SRWLock->c, 1)) {
+            futex(&SRWLock->xchg, FUTEX_WAKE, 1, NULL, NULL, 0);
+        }
+    }
+}
+
+
+
+// ----------------------------------------------------------------------------
+// "ASYNC" functionality below:
+// ----------------------------------------------------------------------------
+
+#include <pthread.h>
+
+struct fpga_async_context {
+    // thread control:
+    pthread_t tid;
+    int is_thread_running;
+    // thread read lock:
+    SRWLOCK lock_thread_read;
+    int is_thread_read;
+    // result lock (wait for read to complete):
+    SRWLOCK lock_result;
+    int is_result;
+    // data:
+    void* data;
+    int data_read;
+    int data_size;
+};
+
+void* fpga_async_thread(void* ctx)
+{
+    struct fpga_async_context *actx = ctx;
+    AcquireSRWLockExclusive(&actx->lock_thread_read);
+    while(actx->is_thread_running) {
+        usleep(5);
+        fpga_read(actx->data, actx->data_size, &actx->data_read);
+        actx->is_result = 1;
+        ReleaseSRWLockExclusive(&actx->lock_result);
+        AcquireSRWLockExclusive(&actx->lock_thread_read);
+    };
+    ReleaseSRWLockExclusive(&actx->lock_result);
+    actx->is_thread_read = 0;
+    actx->tid = 0;
+    return NULL;
+}
+
+int fpga_async_init(void* async_handle)
+{
+    struct fpga_async_context *actx = NULL;
+    actx = malloc(sizeof(struct fpga_async_context));
+    if(!actx) {
+        *(struct fpga_async**)async_handle = NULL;
+        return -1;
+    }
+    memset(actx, 0, sizeof(struct fpga_async_context));
+
+    actx->is_thread_running = 1;
+    actx->is_result = 1;
+    AcquireSRWLockExclusive(&actx->lock_result);
+    AcquireSRWLockExclusive(&actx->lock_thread_read);
+
+    pthread_create(&actx->tid, NULL, fpga_async_thread, actx);
+    if(!actx->tid) {
+        *(struct fpga_async**)async_handle = NULL;
+        free(actx);
+        return -1;
+    }
+
+    *(struct fpga_async_context**)async_handle = actx;
+    return 0;
+}
+
+int fpga_async_close(void* async_handle)
+{
+    struct fpga_async_context *actx = *(struct fpga_async_context**)async_handle;
+    actx->is_thread_running = 0;
+    ReleaseSRWLockExclusive(&actx->lock_thread_read);
+    while(actx->tid) { ; }
+    free(actx);
+    return 0;
+}
+
+int fpga_async_read(void* async_handle, void *data, int size)
+{
+    struct fpga_async_context *actx = *(struct fpga_async_context**)async_handle;
+    uint32_t dummy;
+    if(!actx->is_result) {
+        fpga_async_result(async_handle, &dummy, 1);
+    }
+    actx->data = data;
+    actx->data_size = size;
+    actx->data_read = 0;
+    actx->is_result = 0;
+    actx->is_thread_read = 1;
+    ReleaseSRWLockExclusive(&actx->lock_thread_read);
+    return 0;
+}
+
+int fpga_async_result(void* async_handle, uint32_t *transferred, uint32_t is_wait)
+{
+    struct fpga_async_context *actx = *(struct fpga_async_context**)async_handle;
+    if(actx->is_thread_read) {
+        AcquireSRWLockExclusive(&actx->lock_result);
+        *transferred = actx->data_read;
+        actx->is_thread_read = 0;
+        actx->is_result = 1;
+    } else {
+        *transferred = 0;
+        actx->is_result = 1;
+    }
+    return 0;
+}

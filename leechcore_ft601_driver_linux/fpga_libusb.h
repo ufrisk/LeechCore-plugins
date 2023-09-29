@@ -16,6 +16,11 @@ int fpga_set_chip_configuration(void *config);
 int fpga_read(void *data, int size, int *transferred);
 int fpga_write(void *data, int size, int *transferred);
 
+int fpga_async_init(void* async_handle);
+int fpga_async_close(void* async_handle);
+int fpga_async_read(void* async_handle, void *data, int size);
+int fpga_async_result(void* async_handle, uint32_t *transferred, uint32_t is_wait);
+
 /*
 The FTDI device has 2 interfaces, with one or multiple endpoints, depending the configuration.
 Interface 0:
