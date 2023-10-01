@@ -34,45 +34,47 @@ extern "C" {
 
 #include <libusb.h>
 
+struct ft_handle;
+
 __attribute__((visibility("default")))
 uint32_t FT_Create(
     void *pvArg, 
     uint32_t dwFlags,
-    void **pftHandle
+    struct ft_handle **pftHandle
 );
 
 __attribute__((visibility("default")))
 uint32_t FT_Close(
-    void *ftHandle
+    struct ft_handle *ftHandle
 );
 
 __attribute__((visibility("default")))
 uint32_t FT_GetChipConfiguration(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     void *pvConfiguration
 );
 
 __attribute__((visibility("default")))
 uint32_t FT_SetChipConfiguration(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     void *pvConfiguration
 );
 
 __attribute__((visibility("default")))
 uint32_t FT_SetSuspendTimeout(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     uint32_t Timeout
 );
 
 __attribute__((visibility("default")))
 uint32_t FT_AbortPipe(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     uint8_t ucPipeID
 );
 
 __attribute__((visibility("default")))
 uint32_t FT_WritePipe(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     uint8_t ucPipeID,
     uint8_t *pucBuffer,
     uint32_t ulBufferLength,
@@ -82,7 +84,7 @@ uint32_t FT_WritePipe(
 
 __attribute__((visibility("default")))
 uint32_t FT_WritePipeEx(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     uint8_t ucPipeID,
     uint8_t *pucBuffer,
     uint32_t ulBufferLength,
@@ -92,7 +94,7 @@ uint32_t FT_WritePipeEx(
 
 __attribute__((visibility("default")))
 uint32_t FT_ReadPipe(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     uint8_t ucPipeID,
     uint8_t *pucBuffer,
     uint32_t ulBufferLength,
@@ -102,7 +104,7 @@ uint32_t FT_ReadPipe(
 
 __attribute__((visibility("default")))
 uint32_t FT_ReadPipeEx(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     uint8_t ucPipeID,
     uint8_t *pucBuffer,
     uint32_t ulBufferLength,
@@ -112,19 +114,19 @@ uint32_t FT_ReadPipeEx(
 
 __attribute__((visibility("default")))
 uint32_t FT_InitializeOverlapped(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     void *pOverlapped
 );
 
 __attribute__((visibility("default")))
 uint32_t FT_ReleaseOverlapped(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     void *pOverlapped
 );
 
 __attribute__((visibility("default")))
 uint32_t FT_GetOverlappedResult(
-    void *ftHandle,
+    struct ft_handle *ftHandle,
     void *pOverlapped,
     uint32_t *pulBytesTransferred,
     uint32_t bWait

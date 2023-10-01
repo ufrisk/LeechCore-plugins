@@ -9,17 +9,19 @@
 #ifndef __FPGA_LIBUSB_H__
 #define __FPGA_LIBUSB_H__
 
-int fpga_open(void);
-int fpga_close(void);
-int fpga_get_chip_configuration(void *config);
-int fpga_set_chip_configuration(void *config);
-int fpga_read(void *data, int size, int *transferred);
-int fpga_write(void *data, int size, int *transferred);
+struct fpga_context;
 
-int fpga_async_init(void* async_handle);
-int fpga_async_close(void* async_handle);
-int fpga_async_read(void* async_handle, void *data, int size);
-int fpga_async_result(void* async_handle, uint32_t *transferred, uint32_t is_wait);
+struct fpga_context* fpga_open(int device_index);
+int fpga_close(struct fpga_context *ctx);
+int fpga_get_chip_configuration(struct fpga_context *ctx, void *config);
+int fpga_set_chip_configuration(struct fpga_context *ctx, void *config);
+int fpga_read(struct fpga_context *ctx, void *data, int size, int *transferred);
+int fpga_write(struct fpga_context *ctx, void *data, int size, int *transferred);
+
+int fpga_async_init(struct fpga_context *ctx);
+int fpga_async_close(struct fpga_context *ctx);
+int fpga_async_read(struct fpga_context *ctx, void *data, int size);
+int fpga_async_result(struct fpga_context *ctx, uint32_t *transferred);
 
 /*
 The FTDI device has 2 interfaces, with one or multiple endpoints, depending the configuration.
