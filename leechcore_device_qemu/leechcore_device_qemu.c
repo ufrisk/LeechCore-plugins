@@ -175,7 +175,7 @@ BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC, _Out_opt_ PPLC_CONFIG_ERRORINFO p
     pPathMem = LcDeviceParameterGet(ctxLC, "shm");
     pPathQmp = LcDeviceParameterGet(ctxLC, "qmp");
 
-    if(!pPathMem || !pPathMem->szValue || !pPathMem->szValue[0] || (strlen(pPathMem->szValue) > MAX_PATH - 10)) {
+    if(!pPathMem || !pPathMem->szValue[0] || (strlen(pPathMem->szValue) > MAX_PATH - 10)) {
         lcprintf(ctxLC, "DEVICE: QEMU: FAIL: Required parameter shm not given.\n");
         lcprintf(ctxLC, "   Example: qemu://shm=qemu-ram\n");
         goto fail;
@@ -185,7 +185,7 @@ BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC, _Out_opt_ PPLC_CONFIG_ERRORINFO p
     }
 
 
-    if(!pPathQmp || !pPathMem->szValue || !pPathMem->szValue[0] || (strlen(pPathMem->szValue) > MAX_PATH - 10)) {
+    if(!pPathQmp || !pPathQmp->szValue[0] || (strlen(pPathQmp->szValue) > MAX_PATH - 10)) {
         lcprintf(ctxLC, "DEVICE: QEMU: WARN: Optional parameter qmp not given.\n");
         lcprintf(ctxLC, "   Example: qemu://shm=qemu-ram,qmp=/tmp/qemu-qmp\n");
     } else {
