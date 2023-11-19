@@ -336,9 +336,12 @@ _Success_(return)
 BOOL DeviceHvSavedState_Open_OpenHvHandle(_In_ PLC_CONTEXT ctxLC, PHVSAVEDSTATE_CONTEXT ctx)
 {
     HRESULT hr;
+    DWORD o = 0;
     WCHAR wszVmrs[MAX_PATH] = { 0 };
-    if(_strnicmp("HvSavedState://", ctxLC->Config.szDevice, 15)) { return FALSE; }
-    MultiByteToWideChar(CP_ACP, 0, ctxLC->Config.szDevice + 15, _countof(ctxLC->Config.szDevice) - 15, wszVmrs, _countof(wszVmrs));
+    if(0 == _strnicmp("HvSavedState://", ctxLC->Config.szDevice, 15)) {
+        o += 15;
+    }
+    MultiByteToWideChar(CP_ACP, 0, ctxLC->Config.szDevice + o, _countof(ctxLC->Config.szDevice) - o, wszVmrs, _countof(wszVmrs));
     hr = ctx->fn.LoadSavedStateFile(wszVmrs, &ctx->hVmSavedStateDumpHandle);
     if(FAILED(hr)) {
         lcprintf(ctxLC, "DEVICE: FAILED: Hyper-V Saved State found - but not possible to open. Result 0x%08x\n", hr);
