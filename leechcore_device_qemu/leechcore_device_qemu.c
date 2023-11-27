@@ -5,15 +5,23 @@
 #include <sys/socket.h>
 #include <sys/stat.h>        /* For mode constants */
 #include <sys/un.h>
+#include <string.h>
+#include <dirent.h>
 
 #include <leechcore_device.h>
 
 typedef struct tdDEVICE_CONTEXT_QEMU {
+    enum {
+        QEMU_MEM_TYPE_SHM,
+        QEMU_MEM_TYPE_HUGEPAGE,
+        QEMU_MEM_TYPE_UNDEF,
+    } type;
     PBYTE pb;       // base address of memory mapped region
     SIZE_T cb;      // size of memory mapped region
 } DEVICE_CONTEXT_QEMU, *PDEVICE_CONTEXT_QEMU;
 
 #define QMP_BUFFER_SIZE 0x00100000      // 1MB
+#define HUGEPAGES_PATH "/dev/hugepages/"
 
 //-----------------------------------------------------------------------------
 // GENERAL FUNCTIONALITY BELOW:
@@ -156,6 +164,7 @@ _Success_(return) EXPORTED_FUNCTION
 BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC, _Out_opt_ PPLC_CONFIG_ERRORINFO ppLcCreateErrorInfo)
 {
     PDEVICE_CONTEXT_QEMU ctx = NULL;
+    PLC_DEVICE_PARAMETER_ENTRY pTypeMem = NULL;
     PLC_DEVICE_PARAMETER_ENTRY pPathMem = NULL;
     PLC_DEVICE_PARAMETER_ENTRY pPathQmp = NULL;
     CHAR szPathMem[MAX_PATH] = { 0 }, szPathQmp[MAX_PATH] = { 0 };
@@ -172,27 +181,111 @@ BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC, _Out_opt_ PPLC_CONFIG_ERRORINFO p
     ctx = (PDEVICE_CONTEXT_QEMU)malloc(sizeof(DEVICE_CONTEXT_QEMU));
     if(!ctx) { return false; }
 
-    pPathMem = LcDeviceParameterGet(ctxLC, "shm");
     pPathQmp = LcDeviceParameterGet(ctxLC, "qmp");
-
-    if(!pPathMem || !pPathMem->szValue[0] || (strlen(pPathMem->szValue) > MAX_PATH - 10)) {
-        lcprintf(ctxLC, "DEVICE: QEMU: FAIL: Required parameter shm not given.\n");
-        lcprintf(ctxLC, "   Example: qemu://shm=qemu-ram\n");
-        goto fail;
-    } else {
-        strcat(szPathMem, "/dev/shm/");
-        strcat(szPathMem, pPathMem->szValue);
-    }
-
+    pTypeMem = LcDeviceParameterGet(ctxLC, "type");
 
     if(!pPathQmp || !pPathQmp->szValue[0] || (strlen(pPathQmp->szValue) > MAX_PATH - 10)) {
         lcprintf(ctxLC, "DEVICE: QEMU: WARN: Optional parameter qmp not given.\n");
-        lcprintf(ctxLC, "   Example: qemu://shm=qemu-ram,qmp=/tmp/qemu-qmp\n");
+        lcprintf(ctxLC, "   Example: qemu://qmp=/tmp/qemu-qmp\n");
     } else {
         if(pPathQmp->szValue[0] != '/') {
             strcat(szPathQmp, "/tmp/");
         }
         strcat(szPathQmp, pPathQmp->szValue);
+    }
+
+    if(!pTypeMem || !pTypeMem->szValue[0]) {
+        lcprintf(ctxLC, "DEVICE: QEMU: FAIL: Required parameter type not given.\n");
+        goto fail; 
+    }
+
+    if(strcmp(pTypeMem->szValue, "shm") == 0) {
+        ctx->type = QEMU_MEM_TYPE_SHM;
+    } else if(strcmp(pTypeMem->szValue, "hugepage") == 0) {
+        ctx->type = QEMU_MEM_TYPE_HUGEPAGE;
+    } else {
+        ctx->type = QEMU_MEM_TYPE_UNDEF;
+    }
+
+    switch(ctx->type){
+        case QEMU_MEM_TYPE_SHM:
+        {
+            pPathMem = LcDeviceParameterGet(ctxLC, "shm");
+
+            if(!pPathMem || !pPathMem->szValue[0] || (strlen(pPathMem->szValue) > MAX_PATH - 10)) {
+                lcprintf(ctxLC, "DEVICE: QEMU: FAIL: Required parameter shm not given.\n");
+                lcprintf(ctxLC, "   Example: qemu://type=shm,shm=qemu-ram\n");
+                goto fail;
+            }
+
+            strcat(szPathMem, "/dev/shm/");
+            strcat(szPathMem, pPathMem->szValue);
+
+            break;
+        }
+        case QEMU_MEM_TYPE_HUGEPAGE:
+        {
+            PLC_DEVICE_PARAMETER_ENTRY pPidQemu = NULL;
+            CHAR szPathQemuFdDir[MAX_PATH] = { 0 };
+            DIR *fdDir;
+            struct dirent *dp;
+
+            pPidQemu = LcDeviceParameterGet(ctxLC, "pid");
+
+            if(!pPidQemu || !pPidQemu->szValue[0] || (strlen(pPidQemu->szValue) > MAX_PATH - 10)) {
+                lcprintf(ctxLC, "DEVICE: QEMU: FAIL: Required parameter pid not given.\n");
+                lcprintf(ctxLC, "   Example: qemu://type=hugepage,pid=1000\n");
+                goto fail;
+            }
+
+            strcat(szPathQemuFdDir, "/proc/");
+            strcat(szPathQemuFdDir, pPidQemu->szValue);
+            strcat(szPathQemuFdDir, "/fd/");
+
+            fdDir = opendir(szPathQemuFdDir);
+            if(!fdDir) {
+                lcprintf(ctxLC, "Failed to open qemu fd path\n");
+                goto fail;
+            }
+
+            szPathMem[0] = '\0';
+
+            while ((dp = readdir(fdDir)) != NULL)
+            {
+                CHAR szPathQemuFd[MAX_PATH] = { 0 };
+                CHAR szPathQemuFdReal[MAX_PATH] = { 0 };
+
+                if((strcmp(".", dp->d_name) == 0) || (strcmp("..", dp->d_name) == 0)) {
+                    continue;
+                }
+
+                strcat(szPathQemuFd, szPathQemuFdDir);
+                strcat(szPathQemuFd, dp->d_name);
+
+                if(readlink(szPathQemuFd, szPathQemuFdReal, sizeof(szPathQemuFdReal)) == -1) {
+                    continue;
+                }
+
+                if(strncmp(HUGEPAGES_PATH, szPathQemuFdReal, sizeof(HUGEPAGES_PATH) -1) == 0) {
+                    strcpy(szPathMem, szPathQemuFd);
+                    break;
+                }
+            }
+
+            closedir(fdDir);
+
+            if(strlen(szPathMem) == 0) {
+                lcprintf(ctxLC, "Failed to find qemu hugepage backend path\n");
+                goto fail;
+            }
+
+            break;
+        }
+        default:
+            lcprintf(ctxLC, "DEVICE: QEMU: FAIL: Required parameter type not supported.\n");
+            lcprintf(ctxLC, "   Example: qemu://type=shm,shm=qemu-ram\n");
+            lcprintf(ctxLC, "   Example: qemu://type=hugepage,pid=1000\n");
+            goto fail;
     }
 
     // open shared memory file
@@ -207,7 +300,15 @@ BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC, _Out_opt_ PPLC_CONFIG_ERRORINFO p
     }
     ctx->cb = st.st_size;
 
-    fd = shm_open(pPathMem->szValue, O_RDWR | O_SYNC, 0);
+    switch(ctx->type) {
+        case QEMU_MEM_TYPE_SHM:
+            fd = shm_open(pPathMem->szValue, O_RDWR | O_SYNC, 0);
+            break;
+        default:
+            fd = open(szPathMem, O_RDWR | O_SYNC, 0);
+            break;
+    }
+
     if(fd < 0) {
         lcprintf(ctxLC, "DEVICE: QEMU: FAIL: 'shm_open' failed path='%s', errorcode=%i.\n", szPathMem, fd);
         lcprintf(ctxLC, "  Possible reasons: no read/write access to shared memory file.\n");
