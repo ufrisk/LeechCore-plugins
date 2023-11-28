@@ -131,6 +131,8 @@ sudo -E ./memprocfs -mount xxx -device 'microvmi://memflow_connector_name=qemu_p
 
 #### Authors:
 - Mathieu Renard - www.h2lab.org
+- [Aodzip](https://github.com/aodzip)
+- Ulf Frisk
 
 #### Supported Platforms:
 - Linux
@@ -138,8 +140,11 @@ sudo -E ./memprocfs -mount xxx -device 'microvmi://memflow_connector_name=qemu_p
 #### Overview:
 
 Parameters:
-- `shm`: `filename` of shared memory file in /dev/shm/xxxx
-- `qmp`: `path` to optional qmp socket (used to query vm memory ranges).
+- `shm`: `filename` of shared memory file in /dev/shm/xxxx (if shared memory acquisition method is used).
+- `hugepage-pid=`: libvirt / QEMU process to target (if hugepage acquisition method is used).
+- `qmp`: `path` to optional qmp socket (used to query vm memory ranges, optional).
+- `delay-latency-ns`: Delay in ns to be applied once each read request (optional).
+- `delay-readpage-ns`: Delay in ns to be applied per read page (optional).
 
 ##### QEMU Virtual machine setup
 
