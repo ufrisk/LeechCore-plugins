@@ -11,10 +11,10 @@
 // - README: https://github.com/ufrisk/LeechCore
 // - GUIDE:  https://github.com/ufrisk/LeechCore/wiki
 //
-// (c) Ulf Frisk, 2020-2023
+// (c) Ulf Frisk, 2020-2024
 // Author: Ulf Frisk, pcileech@frizk.net
 //
-// Header Version: 2.16.1
+// Header Version: 2.18.4
 //
 
 #ifndef __LEECHCORE_H__
@@ -46,8 +46,10 @@ typedef uint64_t                            FILETIME, *PFILETIME;
 typedef uint32_t                            DWORD, *PDWORD, *LPDWORD, BOOL, *PBOOL, NTSTATUS;
 typedef uint16_t                            WORD, *PWORD;
 typedef uint8_t                             BYTE, *PBYTE, *LPBYTE, UCHAR;
-typedef char                                CHAR, *PCHAR, *LPSTR, *LPCSTR;
-typedef uint16_t                            WCHAR, *PWCHAR, *LPWSTR, *LPCWSTR;
+typedef char                                CHAR, *PCHAR, *LPSTR;
+typedef const char                          *LPCSTR;
+typedef uint16_t                            WCHAR, *PWCHAR, *LPWSTR;
+typedef const uint16_t                      *LPCWSTR;
 #define MAX_PATH                            260
 #define _In_
 #define _In_z_
@@ -563,6 +565,26 @@ typedef VOID(*PLC_TLP_FUNCTION_CALLBACK)(
 
 #define LC_TLP_FUNCTION_CALLBACK_DISABLE        (PLC_TLP_FUNCTION_CALLBACK)(NULL)
 #define LC_TLP_FUNCTION_CALLBACK_DUMMY          (PLC_TLP_FUNCTION_CALLBACK)(-1)
+
+
+
+//-----------------------------------------------------------------------------
+// VMM (VM) LOOPBACK SUPPORT:
+// Functionality is used to create a VMM loopback device which is used by VMM
+// to read and write memory to/from a virtual machine. See VMM for an example.
+// Struct is passed in the 'hlcvmm' parameter to LcCreate() and will be copied.
+//-----------------------------------------------------------------------------
+
+#define LC_VMM_VERSION                          0x1eef0001
+
+typedef struct tdLC_VMM {
+    DWORD dwVersion;
+    HANDLE hVMM;
+    HANDLE hVMMVM;
+    PVOID pfnVMMDLL_ConfigGet;
+    PVOID pfnVMMDLL_VmMemReadScatter;
+    PVOID pfnVMMDLL_VmMemWriteScatter;
+} LC_VMM, *PLC_VMM;
 
 
 

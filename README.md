@@ -6,6 +6,7 @@ Plugins are related to various kinds of device drivers allowing for modular exte
 
 ## Table of Contents
 
+- [leechdma_driver_linux](#leechdma_driver_linux)
 - [leechcore_ft601_driver_linux](#leechcore_ft601_driver_linux)
 - [leechcore_device_hvsavedstate](#leechcore_device_hvsavedstate)
 - [leechcore_device_rawtcp](#leechcore_device_rawtcp)
@@ -181,3 +182,17 @@ sudo -E ./memprocfs -mount xxx -device 'qemu://shm=qemu-ram,qmp=/tmp/qmp.sock'
 
 
 
+## leechdma_driver_linux
+
+#### Authors:
+- Ulf Frisk
+
+#### Supported Platforms:
+- Linux
+
+#### License:
+- GPLv2
+
+#### Overview:
+
+The LeechDMA linux kernel driver allows the user to compile a kernel module (.ko) which may be inserted into the kernel. When a LeechDMA device (ZDMA or similar) is connected a device will show up as `/dev/leechdma*` where `*` is a number. User mode programs can then communicate with the LeechDMA linux kernel driver and its connected device.
