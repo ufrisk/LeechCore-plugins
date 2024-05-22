@@ -31,6 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "leechcore_device_qemu", "le
 		leechcore_device_qemu\Makefile = leechcore_device_qemu\Makefile
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leechcore_device_skeleton", "leechcore_device_skeleton\leechcore_device_skeleton.vcxproj", "{3FEBCF15-1690-480A-9AC9-8B245AC2E918}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -55,6 +57,14 @@ Global
 		{EBFBB935-6665-4257-9378-8A548CD665AD}.Release|x64.Build.0 = Release|x64
 		{EBFBB935-6665-4257-9378-8A548CD665AD}.Release|x86.ActiveCfg = Release|Win32
 		{EBFBB935-6665-4257-9378-8A548CD665AD}.Release|x86.Build.0 = Release|Win32
+		{3FEBCF15-1690-480A-9AC9-8B245AC2E918}.Debug|x64.ActiveCfg = Debug|x64
+		{3FEBCF15-1690-480A-9AC9-8B245AC2E918}.Debug|x64.Build.0 = Debug|x64
+		{3FEBCF15-1690-480A-9AC9-8B245AC2E918}.Debug|x86.ActiveCfg = Debug|Win32
+		{3FEBCF15-1690-480A-9AC9-8B245AC2E918}.Debug|x86.Build.0 = Debug|Win32
+		{3FEBCF15-1690-480A-9AC9-8B245AC2E918}.Release|x64.ActiveCfg = Release|x64
+		{3FEBCF15-1690-480A-9AC9-8B245AC2E918}.Release|x64.Build.0 = Release|x64
+		{3FEBCF15-1690-480A-9AC9-8B245AC2E918}.Release|x86.ActiveCfg = Release|Win32
+		{3FEBCF15-1690-480A-9AC9-8B245AC2E918}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,44 +12,7 @@ Plugins are related to various kinds of device drivers allowing for modular exte
 - [leechcore_device_rawtcp](#leechcore_device_rawtcp)
 - [leechcore_device_microvmi](#leechcore_device_microvmi)
 - [leechcore_device_qemu](#leechcore_device_qemu)
-
-## leechcore_ft601_driver_linux
-
-#### Authors:
-- Ulf Frisk
-- Jérémie Boutoille from Synacktiv - www.synacktiv.com
-- Based on PCIeScreamer kernel driver from LambdaConcept.
-
-#### Supported Platforms:
-- Linux
-
-#### Overview:
-The leechcore_ft601_driver_linux library allows applications access to a limited version of API calls the FT601 FTD3XX.dll Windows library from ftdichip provided. This allows applications to use a limited FTD3XX.dll compatible application library on Linux. This library does not require LeechCore to function and may be used in other applications as well.
-
-The library requires libusb (`apt-get install libusb-1.0-0`) and access to the usb device (permission change or run as root may be required) alternatively a [Kernel Driver](https://github.com/lambdaconcept/ft60x_driver) provided by LambdaConcept. LeechCore will automatically attempt to locate the kernel driver before using libusb as fallback.
-
-#### Installation instructions:
-Place leechcore_ft601_driver_linux.so alongside leechcore.so.
-
-
-
-## leechcore_device_skeleton
-
-#### Author:
-- Rick Wertenbroek
-
-#### Supported Platfoms:
-- All
-
-#### Overview:
-The leechcore_device_skeleton library is a simple skeleton plugin that only displays the memory read and write requests without doing anything. It is meant to be used as a skeleton to write further plugins.
-
-#### Plugin documentation:
-This plugin only have two parameters `dev` and the optional `size` parameter. The `dev` parameter is required but does nothing, it is meant to demonstrate parameter parsing and checking. The optional `size` parameter defines the memory region size, by default 4 GB, this parameter is meant to limit the memory range for testing and to demonstrate `size_t` type paramter parsing.
-
-Example commands :
-- `./pcileech dump -min 0x0 -max 0x10000 -device 'skeleton://dev=/dev/dummy'`
-- `./pcileech dump -min 0x0 -max 0x10000 -device 'skeleton://dev=/dev/dummy,size=35536'`
+- [leechcore_device_skeleton](#leechcore_device_skeleton)
 
 
 
@@ -67,23 +30,6 @@ The leechcore_device_hvsavedstate library allows applications access to a access
 
 #### Installation instructions:
 Place leechcore_device_hvsavedstate.dll and vmsavedstatedumpprovider.dll alongside leechcore.dll.
-
-
-
-## leechcore_device_rawtcp
-
-#### Authors:
-- Ulf Frisk
-- Synacktiv - www.synacktiv.com
-
-#### Supported Platforms:
-- Windows, Linux
-
-#### Overview:
-Allows LeechCore to connect to a "raw tcp" server which may be used to perform DMA attacks against a compromised iLO interface as described in the [blog entry by Synacktiv](https://www.synacktiv.com/posts/exploit/using-your-bmc-as-a-dma-device-plugging-pcileech-to-hpe-ilo-4.html) amongst other things.
-
-#### Installation instructions:
-Place leechcore_device_rawtcp.[so|dll] alongside leechcore.[so|dll].
 
 
 
@@ -148,6 +94,7 @@ sudo -E ./memprocfs -mount xxx -device 'microvmi://memflow_connector_name=qemu_p
 ~~~
 
 
+
 ## leechcore_device_qemu
 
 #### Authors:
@@ -199,6 +146,63 @@ To enable the memory backend on our virtual machine, we need to add the memory-b
 ~~~
 sudo -E ./memprocfs -mount xxx -device 'qemu://shm=qemu-ram,qmp=/tmp/qmp.sock'
 ~~~
+
+
+
+## leechcore_device_rawtcp
+
+#### Authors:
+- Ulf Frisk
+- Synacktiv - www.synacktiv.com
+
+#### Supported Platforms:
+- Windows, Linux
+
+#### Overview:
+Allows LeechCore to connect to a "raw tcp" server which may be used to perform DMA attacks against a compromised iLO interface as described in the [blog entry by Synacktiv](https://www.synacktiv.com/posts/exploit/using-your-bmc-as-a-dma-device-plugging-pcileech-to-hpe-ilo-4.html) amongst other things.
+
+#### Installation instructions:
+Place leechcore_device_rawtcp.[so|dll] alongside leechcore.[so|dll].
+
+
+
+## leechcore_device_skeleton
+
+#### Author:
+- Rick Wertenbroek
+
+#### Supported Platfoms:
+- All
+
+#### Overview:
+The leechcore_device_skeleton library is a simple skeleton plugin that only displays the memory read and write requests without doing anything. It is meant to be used as a skeleton to write further plugins.
+
+#### Plugin documentation:
+This plugin only have two parameters `dev` and the optional `size` parameter. The `dev` parameter is required but does nothing, it is meant to demonstrate parameter parsing and checking. The optional `size` parameter defines the memory region size, by default 4 GB, this parameter is meant to limit the memory range for testing and to demonstrate `size_t` type paramter parsing.
+
+Example commands :
+- `./pcileech dump -min 0x0 -max 0x10000 -device 'skeleton://dev=/dev/dummy'`
+- `./pcileech dump -min 0x0 -max 0x10000 -device 'skeleton://dev=/dev/dummy,size=35536'`
+
+
+
+## leechcore_ft601_driver_linux
+
+#### Authors:
+- Ulf Frisk
+- Jérémie Boutoille from Synacktiv - www.synacktiv.com
+- Based on PCIeScreamer kernel driver from LambdaConcept.
+
+#### Supported Platforms:
+- Linux
+
+#### Overview:
+The leechcore_ft601_driver_linux library allows applications access to a limited version of API calls the FT601 FTD3XX.dll Windows library from ftdichip provided. This allows applications to use a limited FTD3XX.dll compatible application library on Linux. This library does not require LeechCore to function and may be used in other applications as well.
+
+The library requires libusb (`apt-get install libusb-1.0-0`) and access to the usb device (permission change or run as root may be required) alternatively a [Kernel Driver](https://github.com/lambdaconcept/ft60x_driver) provided by LambdaConcept. LeechCore will automatically attempt to locate the kernel driver before using libusb as fallback.
+
+#### Installation instructions:
+Place leechcore_ft601_driver_linux.so alongside leechcore.so.
 
 
 

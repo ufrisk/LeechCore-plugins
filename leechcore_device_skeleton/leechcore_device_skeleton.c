@@ -99,7 +99,11 @@ BOOL LcPluginCreate(_Inout_ PLC_CONTEXT ctxLC, _Out_opt_ PPLC_CONFIG_ERRORINFO p
     pSizeParameter = LcDeviceParameterGet(ctxLC, "size");
 
     if (pSizeParameter) {
+#ifdef _WIN32
+        ret = sscanf_s(pSizeParameter->szValue, "%zu", &ctx->cb);
+#else /* _WIN32 */
         ret = sscanf(pSizeParameter->szValue, "%zu", &ctx->cb);
+#endif /* _WIN32 */
         if (ret <= 0) {
             lcprintf(ctxLC, "SKELETON: ERROR: Failed to read \"size\" parameter\n");
             goto fail;
