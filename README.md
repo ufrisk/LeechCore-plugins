@@ -33,6 +33,26 @@ Place leechcore_ft601_driver_linux.so alongside leechcore.so.
 
 
 
+## leechcore_device_skeleton
+
+#### Author:
+- Rick Wertenbroek
+
+#### Supported Platfoms:
+- All
+
+#### Overview:
+The leechcore_device_skeleton library is a simple skeleton plugin that only displays the memory read and write requests without doing anything. It is meant to be used as a skeleton to write further plugins.
+
+#### Plugin documentation:
+This plugin only have two parameters `dev` and the optional `size` parameter. The `dev` parameter is required but does nothing, it is meant to demonstrate parameter parsing and checking. The optional `size` parameter defines the memory region size, by default 4 GB, this parameter is meant to limit the memory range for testing and to demonstrate `size_t` type paramter parsing.
+
+Example commands :
+- `./pcileech dump -min 0x0 -max 0x10000 -device 'skeleton://dev=/dev/dummy'`
+- `./pcileech dump -min 0x0 -max 0x10000 -device 'skeleton://dev=/dev/dummy,size=35536'`
+
+
+
 ## leechcore_device_hvsavedstate
 
 #### Authors:
