@@ -147,7 +147,35 @@ To enable the memory backend on our virtual machine, we need to add the memory-b
 sudo -E ./memprocfs -mount xxx -device 'qemu://shm=qemu-ram,qmp=/tmp/qmp.sock'
 ~~~
 
+## leechcore_device_qemupcileech
 
+#### Authors
+- Zero Tang - tangptr.com
+
+#### Supported Platforms
+- Windows, Linux
+
+#### Overview
+Allows LeechCore to connect to a "raw tcp" server hosted by QEMU to perform DMA attacks against the guest inside QEMU. The main purpose of this plugin is to allow security researchers to easily perform DMA attacks and test their IOMMU defenses.
+
+#### Installation Instructions
+Place leechcore_device_qemupcileech.[so|dll] alongside leechcore.[so|dll].
+
+#### QEMU Guide
+A [patch](https://lists.nongnu.org/archive/html/qemu-devel/2024-08/msg00526.html) is submitted to QEMU but it hasn't been merged into the official repository yet. You can build QEMU on your own and apply this patch to test it for yourself. Use [git apply](https://git-scm.com/docs/git-apply) command to add the patch into the code.
+
+Launch the VM with virtual PCILeech device:
+```
+qemu-system-x86_64 -device pcileech,host=0.0.0.0,port=6789
+```
+You can omit `host` and `port` arguments. `host` is default to `0.0.0.0` and `port` is default to `6789`. \
+Append more arguments to fit your VM settings.
+
+Invoke PCILeech:
+```
+pcileech -device qemupcileech://127.0.0.1:6789 display -min 0x3800000
+```
+Replace the IP address and port.
 
 ## leechcore_device_rawtcp
 
