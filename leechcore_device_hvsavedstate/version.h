@@ -4,9 +4,9 @@
 #endif
 
 #define VERSION_MAJOR               2
-#define VERSION_MINOR               17
-#define VERSION_REVISION            2
-#define VERSION_BUILD               66
+#define VERSION_MINOR               18
+#define VERSION_REVISION            8
+#define VERSION_BUILD               76
 
 #define VER_FILE_DESCRIPTION_STR    "LeechCorePlugin : HvSavedState"
 #define VER_FILE_VERSION            VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD

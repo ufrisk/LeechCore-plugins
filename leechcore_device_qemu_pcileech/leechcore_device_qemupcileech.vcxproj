@@ -73,12 +73,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;$(SolutionDir)includes;</IncludePath>
-    <OutDir>$(SolutionDir)files\</OutDir>
+    <OutDir>$(SolutionDir)files\$(PlatformShortName)\</OutDir>
     <IntDir>$(SolutionDir)files\temp\$(ProjectName)\$(PlatformShortName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);;$(SolutionDir)includes;</IncludePath>
-    <OutDir>$(SolutionDir)files\</OutDir>
+    <OutDir>$(SolutionDir)files\$(PlatformShortName)\</OutDir>
     <IntDir>$(SolutionDir)files\temp\$(ProjectName)\$(PlatformShortName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
