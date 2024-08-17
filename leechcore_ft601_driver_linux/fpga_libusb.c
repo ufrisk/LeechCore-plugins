@@ -238,14 +238,14 @@ struct fpga_context* fpga_open(int device_index)
 
     err = libusb_get_string_descriptor_ascii(ctx->device_handle, desc.iProduct, string, sizeof(string));
     if(err) {
-        snprintf(description + strlen(description), sizeof(description), "%s", string);
+        snprintf(description + strlen(description), sizeof(description) - strlen(description), "%s", string);
     } else {
-        snprintf(description + strlen(description), sizeof(description), "%04X", desc.idProduct);
+        snprintf(description + strlen(description), sizeof(description) - strlen(description), "%04X", desc.idProduct);
     }
 
     err = libusb_get_string_descriptor_ascii(ctx->device_handle, desc.iSerialNumber, string, sizeof(string));
     if(err) {
-        snprintf(description + strlen(description), sizeof(description), "%s", string);
+        snprintf(description + strlen(description), sizeof(description) - strlen(description), "%s", string);
     }
 
     vprintfv("[+] %s\n", description);
