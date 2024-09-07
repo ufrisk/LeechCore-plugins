@@ -13,7 +13,7 @@ Plugins are related to various kinds of device drivers allowing for modular exte
 - [leechcore_device_microvmi](#leechcore_device_microvmi)
 - [leechcore_device_qemu](#leechcore_device_qemu)
 - [leechcore_device_skeleton](#leechcore_device_skeleton)
-
+- [leechcore_device_qemupcileech](#leechcore_device_qemupcileech)
 
 
 ## leechcore_device_hvsavedstate
@@ -162,14 +162,13 @@ Allows LeechCore to connect to a "raw tcp" server hosted by QEMU to perform DMA 
 Place leechcore_device_qemupcileech.[so|dll] alongside leechcore.[so|dll].
 
 #### QEMU Guide
-A [patch](https://lists.nongnu.org/archive/html/qemu-devel/2024-08/msg00526.html) is submitted to QEMU but it hasn't been merged into the official repository yet. You can build QEMU on your own and apply this patch to test it for yourself. Use [git apply](https://git-scm.com/docs/git-apply) command to add the patch into the code.
+A [patch](https://lists.nongnu.org/archive/html/qemu-devel/2024-08/msg00526.html) is submitted to QEMU but it hasn't been merged into the official repository yet. An [unofficial QEMU fork](https://github.com/qemu-pcileech/qemu) is available on GitHub with compilation guide for Ubuntu and Windows.
 
-Launch the VM with virtual PCILeech device:
+Launch the VM with virtual PCILeech device and chardev backend (Note that, this plugin currently only supports raw TCP, albeit QEMU chardev supports multiple backends):
 ```
-qemu-system-x86_64 -device pcileech,host=0.0.0.0,port=6789
+qemu-system-x86_64 -device pcileech,chardev=pcileech -chardev socket,id=pcileech,wait=off,server=on,host=0.0.0.0,port=6789
 ```
-You can omit `host` and `port` arguments. `host` is default to `0.0.0.0` and `port` is default to `6789`. \
-Append more arguments to fit your VM settings.
+You may append more arguments to fit your VM settings.
 
 Invoke PCILeech:
 ```

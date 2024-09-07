@@ -43,24 +43,64 @@ typedef struct _DEVICE_CONTEXT_QEMU_PCILEECH
     struct sockaddr_in addrin;
 }DEVICE_CONTEXT_QEMU_PCILEECH,*PDEVICE_CONTEXT_QEMU_PCILEECH;
 
+#define PCILEECH_REQUEST_READ   0
+#define PCILEECH_REQUEST_WRITE  1
+
 typedef struct _PCILEECH_REQUEST_HEADER
 {
-    uint8_t endianness;
     uint8_t command;
-    uint8_t reserved[6];
+    uint8_t reserved[7];
     uint64_t address;
     uint64_t length;
 }PCILEECH_REQUEST_HEADER,*PPCILEECH_REQUEST_HEADER;
 
+#define LEECH_RESULT_OK 0
+#define LEECH_DEVICE_ERROR (1U << 0)
+#define LEECH_DECODE_ERROR (1U << 1)
+#define LEECH_ACCESS_ERROR (1U << 2)
+
+#define LEECH_KNOWN_ERROR_BITS  3
+
 typedef struct _PCILEECH_RESPONSE_HEADER
 {
-    uint8_t endianness;
-    uint8_t reserved[3];
     uint32_t result;    // See MemTxResult definition from QEMU.
+    uint8_t reserved[4];
     uint64_t length;    // Length of data followed after this header.
 }PCILEECH_RESPONSE_HEADER,*PPCILEECH_RESPONSE_HEADER;
 
+const char *QemuPciLeechErrorReasons[LEECH_KNOWN_ERROR_BITS] = 
+{
+    "Device returned an error",
+    "Nothing on this address",
+    "Access denied"
+};
+
+static_assert(LEECH_KNOWN_ERROR_BITS < 32, "The result field has only 32 bits!");
+
 DEVICE_CONTEXT_QEMU_PCILEECH QemuPciLeechContext;
+
+#define CPU_TO_LE32(v) (QemuPciLeechContext.Endianness ? bswap_32(v) : v)
+#define CPU_TO_LE64(v) (QemuPciLeechContext.Endianness ? bswap_64(v) : v)
+
+size_t GetErrorReasonString(uint32_t Reason, char* OutputString, size_t Limit)
+{
+    size_t count = 0;
+    for (int i = 0; i < 32; i++)
+    {
+        if (Reason & (1 << i))
+        {
+            if (i < LEECH_KNOWN_ERROR_BITS)
+                count += snprintf(&OutputString[count], Limit - count, "%s, ",
+                                  QemuPciLeechErrorReasons[i]);
+            else
+                count += snprintf(&OutputString[count], Limit - count,
+                                  "Unknown bit (%d) is set! ", i);
+        }
+    }
+    count += snprintf(&OutputString[count], Limit - count, "Result Code=0x%08X",
+                      Reason);
+    return count;
+}
 
 BOOL InternalConnect(PLC_CONTEXT ctxLC)
 {
@@ -94,110 +134,95 @@ void InternalClose(PLC_CONTEXT ctxLC)
 
 uint32_t InternalReadDma(PLC_CONTEXT ctxLC, uint64_t address, uint8_t *buffer, uint64_t length)
 {
-    if (InternalConnect(ctxLC))
+    // Send request.
+    PCILEECH_REQUEST_HEADER Request = {.address = address,
+                                        .command = PCILEECH_REQUEST_READ,
+                                        .reserved = {0, 0, 0, 0, 0, 0, 0},
+                                        .length = length};
+    PCILEECH_RESPONSE_HEADER Response = {0};
+    char *buff = (char *)&Request;
+    int sendlen = 0, recvlen = 0;
+    while (sendlen < sizeof(Request))
+        sendlen += send(QemuPciLeechContext.sock_fd, &buff[sendlen],
+                        sizeof(Request) - sendlen, 0);
+    // Receive contents.
+    while (recvlen < length)
     {
-        // Send request.
-        PCILEECH_REQUEST_HEADER Request = {.address = address,
-                                           .command = 0,
-                                           .reserved = {0, 0, 0, 0, 0, 0},
-                                           .endianness =
-                                               QemuPciLeechContext.Endianness,
-                                           .length = length};
-        PCILEECH_RESPONSE_HEADER Response = {0};
-        char *buff = (char *)&Request;
-        int sendlen = 0, recvlen = 0;
-        while (sendlen < sizeof(Request))
-            sendlen += send(QemuPciLeechContext.sock_fd, &buff[sendlen],
-                            sizeof(Request) - sendlen, 0);
-        // Receive contents.
-        while (recvlen < length)
+        int resplen = 0, recvlen_i = 0;
+        buff = (char *)&Response;
+        // Receive the header.
+        while (resplen < sizeof(Response))
+            resplen += recv(QemuPciLeechContext.sock_fd, &buff[resplen],
+                            sizeof(Response) - resplen, 0);
+        // Swap endianness if needed.
+        Response.result = CPU_TO_LE32(Response.result);
+        Response.length = CPU_TO_LE64(Response.length);
+        // Check the result.
+        if (Response.result)
         {
-            int resplen = 0, recvlen_i = 0;
-            buff = (char *)&Response;
-            // Receive the header.
-            while (resplen < sizeof(Response))
-                resplen += recv(QemuPciLeechContext.sock_fd, &buff[resplen],
-                                sizeof(Response) - resplen, 0);
-            // Swap endianness if needed.
-            if (Response.endianness != QemuPciLeechContext.Endianness)
-            {
-                Response.result = bswap_32(Response.result);
-                Response.length = bswap_64(Response.length);
-            }
-            // Check the result.
-            if (Response.result)
-            {
-                lcprintf(ctxLC,
-                         "QEMU-PCILeech: DMA-Read Encountered Error! "
-                         "MemTxResult=0x%X\n",
-                         Response.result);
-                break;
-            }
-            // Receive contents.
-            while (recvlen_i < Response.length)
-                recvlen_i += recv(QemuPciLeechContext.sock_fd,
-                                  &buffer[recvlen + recvlen_i],
-                                  (int)(Response.length - recvlen_i), 0);
-            // Accumulate counter.
-            recvlen += recvlen_i;
+            char ErrorReason[512];
+            GetErrorReasonString(Response.result, ErrorReason,
+                                 sizeof(ErrorReason));
+            lcprintf(ctxLC,
+                     "QEMU-PCILeech: DMA-Read Encountered Error! "
+                     "Reason: %s\n",
+                     ErrorReason);
         }
-        InternalClose(ctxLC);
-        return Response.result;
+        // Receive contents.
+        while (recvlen_i < Response.length)
+            recvlen_i += recv(QemuPciLeechContext.sock_fd,
+                                &buffer[recvlen + recvlen_i],
+                                (int)(Response.length - recvlen_i), 0);
+        // Accumulate counter.
+        recvlen += recvlen_i;
     }
-    return 0xFFFFFFFF;
+    return Response.result;
 }
 
 uint32_t InternalWriteDma(PLC_CONTEXT ctxLC, uint64_t address, uint8_t* buffer, uint64_t length)
 {
-    if (InternalConnect(ctxLC))
+    // Send request.
+    PCILEECH_REQUEST_HEADER Request = {.address = address,
+                                        .command = PCILEECH_REQUEST_WRITE,
+                                        .reserved = {0, 0, 0, 0, 0, 0},
+                                        .length = length};
+    PCILEECH_RESPONSE_HEADER Response = {0};
+    char *buff = (char *)&Request;
+    int sendlen = 0;
+    while (sendlen < sizeof(Request))
+        sendlen += send(QemuPciLeechContext.sock_fd, &buff[sendlen],
+                        sizeof(Request) - sendlen, 0);
+    // Send data.
+    sendlen = 0;
+    while (sendlen < length)
     {
-        // Send request.
-        PCILEECH_REQUEST_HEADER Request = {.address = address,
-                                           .command = 1,
-                                           .reserved = {0, 0, 0, 0, 0, 0},
-                                           .endianness =
-                                               QemuPciLeechContext.Endianness,
-                                           .length = length};
-        PCILEECH_RESPONSE_HEADER Response = {0};
-        char *buff = (char *)&Request;
-        int sendlen = 0;
-        while (sendlen < sizeof(Request))
-            sendlen += send(QemuPciLeechContext.sock_fd, &buff[sendlen],
-                            sizeof(Request) - sendlen, 0);
-        // Send data.
-        sendlen = 0;
-        while (sendlen < length)
+        int resplen = 0, sendlen_i = 0;
+        buff = (char *)&Response;
+        // Send a segment.
+        while (sendlen_i < 1024)
+            sendlen_i +=
+                send(QemuPciLeechContext.sock_fd,
+                        &buffer[sendlen + sendlen_i], 1024 - sendlen_i, 0);
+        // Receive response.
+        while (resplen < sizeof(Response))
+            resplen += recv(QemuPciLeechContext.sock_fd, &buff[resplen],
+                            sizeof(Response) - resplen, 0);
+        // Swap endianness if needed.
+        Response.result = CPU_TO_LE32(Response.result);
+        Response.length = CPU_TO_LE64(Response.length);
+        // Check the result.
+        if (Response.result)
         {
-            int resplen = 0, sendlen_i = 0;
-            buff = (char *)&Response;
-            // Send a segment.
-            while (sendlen_i < 1024)
-                sendlen_i +=
-                    send(QemuPciLeechContext.sock_fd,
-                         &buffer[sendlen + sendlen_i], 1024 - sendlen_i, 0);
-            // Receive response.
-            while (resplen < sizeof(Response))
-                resplen += recv(QemuPciLeechContext.sock_fd, &buff[resplen],
-                                sizeof(Response) - resplen, 0);
-            // Swap endianness if needed.
-            if (Response.endianness != QemuPciLeechContext.Endianness)
-            {
-                Response.result = bswap_32(Response.result);
-                Response.length = bswap_64(Response.length);
-            }
-            // Check the result.
-            if (Response.result)
-            {
-                lcprintf(ctxLC,
-                         "QEMU-PCILeech: DMA-Write Encountered Error! "
-                         "MemTxResult=0x%X\n",
-                         Response.result);
-                break;
-            }
+            char ErrorReason[512];
+            GetErrorReasonString(Response.result, ErrorReason,
+                                 sizeof(ErrorReason));
+            lcprintf(ctxLC,
+                     "QEMU-PCILeech: DMA-Write Encountered Error! "
+                     "Reason: %s\n",
+                     ErrorReason);
         }
-        InternalClose(ctxLC);
     }
-    return 0xFFFFFFFF;
+    return Response.result;
 }
 
 void LcPluginReadScatter(PLC_CONTEXT ctxLC, DWORD cpMEMs, PPMEM_SCATTER ppMEMs)
@@ -222,6 +247,7 @@ void LcPluginWriteScatter(PLC_CONTEXT ctxLC, DWORD cpMEMs, PPMEM_SCATTER ppMEMs)
 
 void LcPluginClose(PLC_CONTEXT ctxLC)
 {
+    InternalClose(ctxLC);
 #ifdef _WIN32
     // Win32 requires Startup and Cleanup for socket operations.
     WSACleanup();
@@ -283,5 +309,5 @@ EXPORTED_FUNCTION BOOL LcPluginCreate(PLC_CONTEXT ctxLC, PPLC_CONFIG_ERRORINFO p
     ctxLC->pfnReadScatter = LcPluginReadScatter;
     ctxLC->pfnWriteScatter = LcPluginWriteScatter;
     ctxLC->pfnClose = LcPluginClose;
-    return TRUE;
+    return InternalConnect(ctxLC);
 }
