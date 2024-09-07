@@ -43,6 +43,9 @@ typedef struct _DEVICE_CONTEXT_QEMU_PCILEECH
     struct sockaddr_in addrin;
 }DEVICE_CONTEXT_QEMU_PCILEECH,*PDEVICE_CONTEXT_QEMU_PCILEECH;
 
+#define PCILEECH_REQUEST_READ   0
+#define PCILEECH_REQUEST_WRITE  1
+
 typedef struct _PCILEECH_REQUEST_HEADER
 {
     uint8_t command;
@@ -51,6 +54,13 @@ typedef struct _PCILEECH_REQUEST_HEADER
     uint64_t length;
 }PCILEECH_REQUEST_HEADER,*PPCILEECH_REQUEST_HEADER;
 
+#define LEECH_RESULT_OK 0
+#define LEECH_DEVICE_ERROR (1U << 0)
+#define LEECH_DECODE_ERROR (1U << 1)
+#define LEECH_ACCESS_ERROR (1U << 2)
+
+#define LEECH_KNOWN_ERROR_BITS  3
+
 typedef struct _PCILEECH_RESPONSE_HEADER
 {
     uint32_t result;    // See MemTxResult definition from QEMU.
@@ -58,10 +68,39 @@ typedef struct _PCILEECH_RESPONSE_HEADER
     uint64_t length;    // Length of data followed after this header.
 }PCILEECH_RESPONSE_HEADER,*PPCILEECH_RESPONSE_HEADER;
 
+const char *QemuPciLeechErrorReasons[LEECH_KNOWN_ERROR_BITS] = 
+{
+    "Device returned an error",
+    "Nothing on this address",
+    "Access denied"
+};
+
+static_assert(LEECH_KNOWN_ERROR_BITS < 32, "The result field has only 32 bits!");
+
 DEVICE_CONTEXT_QEMU_PCILEECH QemuPciLeechContext;
 
 #define CPU_TO_LE32(v) (QemuPciLeechContext.Endianness ? bswap_32(v) : v)
 #define CPU_TO_LE64(v) (QemuPciLeechContext.Endianness ? bswap_64(v) : v)
+
+size_t GetErrorReasonString(uint32_t Reason, char* OutputString, size_t Limit)
+{
+    size_t count = 0;
+    for (int i = 0; i < 32; i++)
+    {
+        if (Reason & (1 << i))
+        {
+            if (i < LEECH_KNOWN_ERROR_BITS)
+                count += snprintf(&OutputString[count], Limit - count, "%s, ",
+                                  QemuPciLeechErrorReasons[i]);
+            else
+                count += snprintf(&OutputString[count], Limit - count,
+                                  "Unknown bit (%d) is set! ", i);
+        }
+    }
+    count += snprintf(&OutputString[count], Limit - count, "Result Code=0x%08X",
+                      Reason);
+    return count;
+}
 
 BOOL InternalConnect(PLC_CONTEXT ctxLC)
 {
@@ -97,7 +136,7 @@ uint32_t InternalReadDma(PLC_CONTEXT ctxLC, uint64_t address, uint8_t *buffer, u
 {
     // Send request.
     PCILEECH_REQUEST_HEADER Request = {.address = address,
-                                        .command = 0,
+                                        .command = PCILEECH_REQUEST_READ,
                                         .reserved = {0, 0, 0, 0, 0, 0, 0},
                                         .length = length};
     PCILEECH_RESPONSE_HEADER Response = {0};
@@ -121,10 +160,13 @@ uint32_t InternalReadDma(PLC_CONTEXT ctxLC, uint64_t address, uint8_t *buffer, u
         // Check the result.
         if (Response.result)
         {
+            char ErrorReason[512];
+            GetErrorReasonString(Response.result, ErrorReason,
+                                 sizeof(ErrorReason));
             lcprintf(ctxLC,
-                        "QEMU-PCILeech: DMA-Read Encountered Error! "
-                        "Result = 0x%X\n",
-                        Response.result);
+                     "QEMU-PCILeech: DMA-Read Encountered Error! "
+                     "Reason: %s\n",
+                     ErrorReason);
         }
         // Receive contents.
         while (recvlen_i < Response.length)
@@ -141,7 +183,7 @@ uint32_t InternalWriteDma(PLC_CONTEXT ctxLC, uint64_t address, uint8_t* buffer, 
 {
     // Send request.
     PCILEECH_REQUEST_HEADER Request = {.address = address,
-                                        .command = 1,
+                                        .command = PCILEECH_REQUEST_WRITE,
                                         .reserved = {0, 0, 0, 0, 0, 0},
                                         .length = length};
     PCILEECH_RESPONSE_HEADER Response = {0};
@@ -171,12 +213,16 @@ uint32_t InternalWriteDma(PLC_CONTEXT ctxLC, uint64_t address, uint8_t* buffer, 
         // Check the result.
         if (Response.result)
         {
+            char ErrorReason[512];
+            GetErrorReasonString(Response.result, ErrorReason,
+                                 sizeof(ErrorReason));
             lcprintf(ctxLC,
-                        "QEMU-PCILeech: DMA-Write Encountered Error! "
-                        "Result = 0x%X\n",
-                        Response.result);
+                     "QEMU-PCILeech: DMA-Write Encountered Error! "
+                     "Reason: %s\n",
+                     ErrorReason);
         }
     }
+    return Response.result;
 }
 
 void LcPluginReadScatter(PLC_CONTEXT ctxLC, DWORD cpMEMs, PPMEM_SCATTER ppMEMs)
