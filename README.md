@@ -8,6 +8,7 @@ Plugins are related to various kinds of device drivers allowing for modular exte
 
 - [leechdma_driver_linux](#leechdma_driver_linux)
 - [leechcore_ft601_driver_linux](#leechcore_ft601_driver_linux)
+- [leechcore_ft601_driver_macos](#leechcore_ft601_driver_macos)
 - [leechcore_device_hvsavedstate](#leechcore_device_hvsavedstate)
 - [leechcore_device_rawtcp](#leechcore_device_rawtcp)
 - [leechcore_device_microvmi](#leechcore_device_microvmi)
@@ -230,6 +231,22 @@ The library requires libusb (`apt-get install libusb-1.0-0`) and access to the u
 
 #### Installation instructions:
 Place leechcore_ft601_driver_linux.so alongside leechcore.so.
+
+
+
+## leechcore_ft601_driver_macos
+
+#### Authors:
+- Ulf Frisk
+
+#### Supported Platforms:
+- macOS
+
+#### Overview:
+The leechcore_ft601_driver_macos library allows applications access to a limited version of API calls the FT601 libftd3xx.dylib from ftdichip which must be placed alongside leechcore_ft601_driver_macos.dylib.
+
+#### Installation instructions:
+Place leechcore_ft601_driver_macos.dylib and libftd3xx.dylib (from ftdichip) alongside leechcore.dylib.
 
 
 
