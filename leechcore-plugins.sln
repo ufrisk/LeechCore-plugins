@@ -33,7 +33,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "leechcore_device_qemu", "le
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leechcore_device_skeleton", "leechcore_device_skeleton\leechcore_device_skeleton.vcxproj", "{3FEBCF15-1690-480A-9AC9-8B245AC2E918}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leechcore_device_qemu_pcileech", "leechcore_device_qemu_pcileech\leechcore_device_qemupcileech.vcxproj", "{B8269166-6B3B-479C-B230-DE811AB4ADA8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "leechcore_device_qemupcileech", "leechcore_device_qemu_pcileech\leechcore_device_qemupcileech.vcxproj", "{B8269166-6B3B-479C-B230-DE811AB4ADA8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "leechcore_ft601_driver_macos", "leechcore_ft601_driver_macos", "{9AD1E16A-8C2A-402A-965D-19E853B48593}"
+	ProjectSection(SolutionItems) = preProject
+		leechcore_ft601_driver_macos\fpga_ft601.c = leechcore_ft601_driver_macos\fpga_ft601.c
+		leechcore_ft601_driver_macos\fpga_ft601.h = leechcore_ft601_driver_macos\fpga_ft601.h
+		leechcore_ft601_driver_macos\leechcore_ft601_driver_macos.c = leechcore_ft601_driver_macos\leechcore_ft601_driver_macos.c
+		leechcore_ft601_driver_macos\leechcore_ft601_driver_macos.h = leechcore_ft601_driver_macos\leechcore_ft601_driver_macos.h
+		leechcore_ft601_driver_macos\Makefile.macos = leechcore_ft601_driver_macos\Makefile.macos
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -86,6 +86,8 @@ struct fpga_context {
         PFN_FT_WritePipe pfnFT_WritePipe;
         PFN_FT_ReadPipe pfnFT_ReadPipe;
     } pfn;
+    int is_safe_mode;
+    SRWLOCK lock;
     // async context:
     struct {
         uint32_t is_valid;
@@ -141,6 +143,9 @@ struct fpga_context *fpga_open(void *pvArg, uint32_t dwFlags)
         goto fail;
     }
 
+    ctx->is_safe_mode = ((uint64_t)pvArg >> 31) ? 0 : 1;
+    pvArg = (void*)((uint64_t)pvArg & 0x7FFFFFFF);
+
     // ft601 initialize handle:
     rc = ctx->pfn.pfnFT_Create(pvArg, dwFlags, &ctx->ftHandle);
     if(rc) {
@@ -183,16 +188,32 @@ uint32_t fpga_set_chip_configuration(struct fpga_context *ctx, void *config)
 
 uint32_t fpga_read(struct fpga_context *ctx, void *data, uint32_t size, uint32_t *transferred)
 {
+    uint32_t rc;
     if(ctx->async.is_thread_read) {
         vprintfv("[-] previous async read is not yet completed. complete by reading results before initiating new read!\n");
         return FT_OTHER_ERROR;
     }
-    return ctx->pfn.pfnFT_ReadPipe(ctx->ftHandle, FTDI_ENDPOINT_IN, data, size, transferred, 0);
+    if(ctx->is_safe_mode) {
+        AcquireSRWLockExclusive(&ctx->lock);
+        rc = ctx->pfn.pfnFT_ReadPipe(ctx->ftHandle, FTDI_ENDPOINT_IN, data, size, transferred, 0);
+        ReleaseSRWLockExclusive(&ctx->lock);
+    } else {
+        rc = ctx->pfn.pfnFT_ReadPipe(ctx->ftHandle, FTDI_ENDPOINT_IN, data, size, transferred, 0);
+    }
+    return rc;
 }
 
 uint32_t fpga_write(struct fpga_context *ctx, void *data, uint32_t size, uint32_t *transferred)
 {
-    return ctx->pfn.pfnFT_WritePipe(ctx->ftHandle, FTDI_ENDPOINT_OUT, data, size, transferred, 0);
+    uint32_t rc;
+    if(ctx->is_safe_mode) {
+        AcquireSRWLockExclusive(&ctx->lock);
+        rc = ctx->pfn.pfnFT_WritePipe(ctx->ftHandle, FTDI_ENDPOINT_OUT, data, size, transferred, 0);
+        ReleaseSRWLockExclusive(&ctx->lock);
+    } else {
+        rc = ctx->pfn.pfnFT_WritePipe(ctx->ftHandle, FTDI_ENDPOINT_OUT, data, size, transferred, 0);
+    }
+    return rc;
 }
 
 
@@ -205,7 +226,20 @@ int fpga_read_internal(struct fpga_context *ctx, void *data, int size, int *tran
 {
     uint32_t rc;
     *transferred = 0;
-    rc = ctx->pfn.pfnFT_ReadPipe(ctx->ftHandle, FTDI_ENDPOINT_IN, data, size, (uint32_t*)transferred, 1000);
+    if(ctx->is_safe_mode) {
+        AcquireSRWLockExclusive(&ctx->lock);
+        rc = ctx->pfn.pfnFT_ReadPipe(ctx->ftHandle, FTDI_ENDPOINT_IN, data, size, (uint32_t *)transferred, 1000);
+        ReleaseSRWLockExclusive(&ctx->lock);
+    } else {
+        rc = ctx->pfn.pfnFT_ReadPipe(ctx->ftHandle, FTDI_ENDPOINT_IN, data, size, (uint32_t *)transferred, 1000);
+    }
+    if(rc && !ctx->is_safe_mode) {
+        usleep(100);
+        ctx->is_safe_mode = 1;
+        AcquireSRWLockExclusive(&ctx->lock);
+        rc = ctx->pfn.pfnFT_ReadPipe(ctx->ftHandle, FTDI_ENDPOINT_IN, data, size, (uint32_t *)transferred, 1000);
+        ReleaseSRWLockExclusive(&ctx->lock);
+    }
     if(rc) {
         vprintfv("[-] bulk transfer error: %i \n", rc);
         return -1;
@@ -218,6 +252,7 @@ void* fpga_async_thread(void* thread_ctx)
     struct fpga_context *ctx = thread_ctx;
     AcquireSRWLockExclusive(&ctx->async.lock_thread_read);
     while(ctx->async.is_valid) {
+        usleep(20);
         fpga_read_internal(ctx, ctx->async.data, ctx->async.data_size, &ctx->async.data_read);
         ctx->async.is_result = 1;
         ReleaseSRWLockExclusive(&ctx->async.lock_result);
