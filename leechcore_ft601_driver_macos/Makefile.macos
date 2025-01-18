@@ -9,20 +9,40 @@ CFLAGS += -mmacosx-version-min=11.0
 LDFLAGS += -dynamiclib -L.
 LDFLAGS += -Wl,-rpath,@loader_path
 LDFLAGS += -g -mmacosx-version-min=11.0
+
 DEPS = leechcore_ft601_driver_macos.h
 OBJ = fpga_ft601.o leechcore_ft601_driver_macos.o
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+# ARCH SPECIFIC FLAGS:
+CFLAGS_X86_64  = $(CFLAGS) -arch x86_64
+CFLAGS_ARM64   = $(CFLAGS) -arch arm64
+LDFLAGS_X86_64 = $(LDFLAGS) -arch x86_64
+LDFLAGS_ARM64  = $(LDFLAGS) -arch arm64
+OBJ_X86_64 = $(OBJ:.o=.o.x86_64)
+OBJ_ARM64  = $(OBJ:.o=.o.arm64)
 
-leechcore_ft601_driver_macos: $(OBJ)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o leechcore_ft601_driver_macos.dylib $^
+all: leechcore_ft601_driver_macos
+
+%.o.x86_64: %.c $(DEPS)
+	$(CC) $(CFLAGS_X86_64) -c -o $@ $<
+
+%.o.arm64: %.c $(DEPS)
+	$(CC) $(CFLAGS_ARM64) -c -o $@ $<
+
+leechcore_ft601_driver_macos_x86_64.dylib: $(OBJ_X86_64)
+	$(CC) $(LDFLAGS_X86_64) -o $@ $^
+
+leechcore_ft601_driver_macos_arm64.dylib: $(OBJ_ARM64)
+	$(CC) $(LDFLAGS_ARM64) -o $@ $^
+
+leechcore_ft601_driver_macos: leechcore_ft601_driver_macos_x86_64.dylib leechcore_ft601_driver_macos_arm64.dylib
+	lipo -create -output leechcore_ft601_driver_macos.dylib leechcore_ft601_driver_macos_x86_64.dylib leechcore_ft601_driver_macos_arm64.dylib
 	mkdir -p ../files
 	mv leechcore_ft601_driver_macos.dylib ../files/
-	rm -f *.o || true
+	rm -f *.o *.o.x86_64 *.o.arm64 || true
 	rm -f *.dylib || true
 	true
 
 clean:
-	rm -f *.o || true
+	rm -f *.o *.o.x86_64 *.o.arm64 || true
 	rm -f *.dylib || true
