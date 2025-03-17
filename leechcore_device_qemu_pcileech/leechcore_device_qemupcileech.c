@@ -75,7 +75,7 @@ const char *QemuPciLeechErrorReasons[LEECH_KNOWN_ERROR_BITS] =
     "Access denied"
 };
 
-static_assert(LEECH_KNOWN_ERROR_BITS < 32, "The result field has only 32 bits!");
+_Static_assert(LEECH_KNOWN_ERROR_BITS < 32, "The result field has only 32 bits!");
 
 DEVICE_CONTEXT_QEMU_PCILEECH QemuPciLeechContext;
 
