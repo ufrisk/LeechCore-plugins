@@ -7,6 +7,7 @@ all:
 	$(MAKE) -C leechcore_device_qemu
 	$(MAKE) -C leechcore_device_qemu_pcileech
 	$(MAKE) -C leechcore_device_skeleton
+	$(MAKE) -C leechcore_device_devmem
 
 clean:
 	$(MAKE) -C leechcore_ft601_driver_linux clean
@@ -15,3 +16,4 @@ clean:
 	$(MAKE) -C leechcore_device_qemu clean
 	$(MAKE) -C leechcore_device_qemu_pcileech clean
 	$(MAKE) -C leechcore_device_skeleton clean
+	$(MAKE) -C leechcore_device_devmem clean
