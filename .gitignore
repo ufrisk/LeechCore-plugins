@@ -6,6 +6,6 @@
 *.iobj
 *.ipdb
 *.lastcodeanalysissucceeded
-/.vs
+**/.vs/
 /.gitattributes
 /files

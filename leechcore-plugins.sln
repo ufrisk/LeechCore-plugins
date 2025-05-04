@@ -44,6 +44,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "leechcore_ft601_driver_maco
 		leechcore_ft601_driver_macos\Makefile.macos = leechcore_ft601_driver_macos\Makefile.macos
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "leechcore_device_devmem", "leechcore_device_devmem", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		leechcore_device_devmem\leechcore_device_devmem.c = leechcore_device_devmem\leechcore_device_devmem.c
+		leechcore_device_devmem\Makefile = leechcore_device_devmem\Makefile
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
