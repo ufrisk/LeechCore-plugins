@@ -15,6 +15,7 @@ Plugins are related to various kinds of device drivers allowing for modular exte
 - [leechcore_device_qemu](#leechcore_device_qemu)
 - [leechcore_device_skeleton](#leechcore_device_skeleton)
 - [leechcore_device_qemupcileech](#leechcore_device_qemupcileech)
+- [leechcore_device_devmem](#leechcore_device_devmem)
 
 
 ## leechcore_device_hvsavedstate
@@ -264,3 +265,26 @@ Place leechcore_ft601_driver_macos.dylib and libftd3xx.dylib (from ftdichip) alo
 #### Overview:
 
 The LeechDMA linux kernel driver allows the user to compile a kernel module (.ko) which may be inserted into the kernel. When a LeechDMA device (ZDMA or similar) is connected a device will show up as `/dev/leechdma*` where `*` is a number. User mode programs can then communicate with the LeechDMA linux kernel driver and its connected device.
+
+
+
+## leechcore_device_devmem
+
+#### Authors:
+- Brendan Heinonen ([@staticinvocation](https://github.com/staticinvocation))
+
+#### Supported Platforms:
+- Linux
+
+#### Overview:
+Allows LeechCore to access physical memory through a character device (i.e. `/dev/mem`) on the system.
+
+#### Plugin documentation:
+This plugin has an optional `path` parameter. When specified, the plugin will use the character device specified. By default this value is set to `/dev/mem`.
+
+Example commands:
+- `./pcileech dump -min 0x0 -max 0x10000 -device 'devmem://path=/dev/mem'`
+
+
+#### Installation instructions:
+Place leechcore_device_devmem.so alongside leechcore.so.
