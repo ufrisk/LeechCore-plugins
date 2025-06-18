@@ -198,11 +198,13 @@ uint32_t InternalWriteDma(PLC_CONTEXT ctxLC, uint64_t address, uint8_t* buffer, 
     {
         int resplen = 0, sendlen_i = 0;
         buff = (char *)&Response;
+        uint64_t remaining = length - sendlen;
+        int chunk_size = (remaining > 1024) ? 1024 : (int)remaining;
         // Send a segment.
-        while (sendlen_i < 1024)
+        while (sendlen_i < chunk_size)
             sendlen_i +=
                 send(QemuPciLeechContext.sock_fd,
-                        &buffer[sendlen + sendlen_i], 1024 - sendlen_i, 0);
+                        &buffer[sendlen + sendlen_i], chunk_size - sendlen_i, 0);
         // Receive response.
         while (resplen < sizeof(Response))
             resplen += recv(QemuPciLeechContext.sock_fd, &buff[resplen],
@@ -221,6 +223,8 @@ uint32_t InternalWriteDma(PLC_CONTEXT ctxLC, uint64_t address, uint8_t* buffer, 
                      "Reason: %s\n",
                      ErrorReason);
         }
+        // Accumulate counter.
+        sendlen += sendlen_i;
     }
     return Response.result;
 }
