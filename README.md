@@ -235,6 +235,24 @@ Place leechcore_ft601_driver_linux.so alongside leechcore.so.
 
 
 
+## leechcore_ft601_driver_linux_ftdi
+
+#### Authors:
+- Ulf Frisk
+
+#### Supported Platforms:
+- Linux
+
+#### Overview:
+The alternate leechcore_ft601_driver_linux library acts as a wrapper library to the ftdichip closed source driver libftd3xx.so by ftdichip. This library does not require LeechCore to function and may be used in other applications as well.
+
+The library requires libusb (`apt-get install libusb-1.0-0`) and access to the usb device (permission change or run as root may be required).
+
+#### Installation instructions:
+Place leechcore_ft601_driver_linux.so alongside leechcore.so and libftd3xx.so.
+
+
+
 ## leechcore_ft601_driver_macos
 
 #### Authors:

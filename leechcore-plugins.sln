@@ -50,6 +50,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "leechcore_device_devmem", "
 		leechcore_device_devmem\Makefile = leechcore_device_devmem\Makefile
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "leechcore_ft601_driver_linux_ftdi", "leechcore_ft601_driver_linux_ftdi", "{C534E47F-4ACE-4039-A979-82E548369F1F}"
+	ProjectSection(SolutionItems) = preProject
+		leechcore_ft601_driver_linux_ftdi\fpga_ft601.c = leechcore_ft601_driver_linux_ftdi\fpga_ft601.c
+		leechcore_ft601_driver_linux_ftdi\fpga_ft601.h = leechcore_ft601_driver_linux_ftdi\fpga_ft601.h
+		leechcore_ft601_driver_linux_ftdi\leechcore_ft601_driver_linux.c = leechcore_ft601_driver_linux_ftdi\leechcore_ft601_driver_linux.c
+		leechcore_ft601_driver_linux_ftdi\leechcore_ft601_driver_linux.h = leechcore_ft601_driver_linux_ftdi\leechcore_ft601_driver_linux.h
+		leechcore_ft601_driver_linux_ftdi\Makefile = leechcore_ft601_driver_linux_ftdi\Makefile
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
