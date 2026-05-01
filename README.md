@@ -185,13 +185,13 @@ Replace the IP address and port.
 - Synacktiv - www.synacktiv.com
 
 #### Supported Platforms:
-- Windows, Linux
+- All
 
 #### Overview:
 Allows LeechCore to connect to a "raw tcp" server which may be used to perform DMA attacks against a compromised iLO interface as described in the [blog entry by Synacktiv](https://www.synacktiv.com/posts/exploit/using-your-bmc-as-a-dma-device-plugging-pcileech-to-hpe-ilo-4.html) amongst other things.
 
 #### Installation instructions:
-Place leechcore_device_rawtcp.[so|dll] alongside leechcore.[so|dll].
+Place leechcore_device_rawtcp.[so|dll|dylib] alongside leechcore.[so|dll|dylib].
 
 
 

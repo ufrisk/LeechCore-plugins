@@ -3,7 +3,7 @@
 // (c) Ulf Frisk, 2020
 // Author: Ulf Frisk, pcileech@frizk.net
 //
-#ifdef LINUX
+#if defined(LINUX) || defined(MACOS)
 
 #include "oscompatibility.h"
 
