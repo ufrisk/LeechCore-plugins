@@ -8,6 +8,10 @@
 
 #ifdef LINUX
 #define _GNU_SOURCE
+#endif /* LINUX */
+
+#if defined(LINUX) || defined(MACOS)
+#include <leechcore.h>
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -17,12 +21,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-typedef void                                VOID, *PVOID;
-typedef void                                *HANDLE, **PHANDLE;
-typedef char                                CHAR, *PCHAR, *PSTR, *LPSTR;
-typedef uint16_t                            WORD, *PWORD, USHORT, *PUSHORT;
-typedef uint32_t                            DWORD, *PDWORD;
-typedef uint64_t                            SIZE_T, *PSIZE_T;
 
 #define SOCKET                              int
 #define INVALID_SOCKET	                    -1
@@ -40,6 +38,6 @@ typedef uint64_t                            SIZE_T, *PSIZE_T;
 HANDLE LocalAlloc(DWORD uFlags, SIZE_T uBytes);
 VOID LocalFree(HANDLE hMem);
 
-#endif /* LINUX */
+#endif /* LINUX || MACOS */
 
 #endif /* __OSCOMPATIBILITY_H__ */

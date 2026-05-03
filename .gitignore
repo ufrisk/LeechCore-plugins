@@ -9,3 +9,6 @@
 **/.vs/
 /.gitattributes
 /files
+*.x86_64
+*.arm64
+*.dylib
