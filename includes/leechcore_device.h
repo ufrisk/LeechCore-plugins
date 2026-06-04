@@ -139,14 +139,14 @@ EXPORTED_FUNCTION PLC_DEVICE_PARAMETER_ENTRY LcDeviceParameterGet(_In_ PLC_CONTE
 */
 EXPORTED_FUNCTION QWORD LcDeviceParameterGetNumeric(_In_ PLC_CONTEXT ctxLC, _In_ LPSTR szName);
 
-#define lcprintf(ctxLC, _Format, ...)        { if(ctxLC->fPrintf[0]) { ctxLC->Config.pfn_printf_opt ? ctxLC->Config.pfn_printf_opt(_Format, ##__VA_ARGS__) : printf(_Format, ##__VA_ARGS__); } }
-#define lcprintfv(ctxLC, _Format, ...)       { if(ctxLC->fPrintf[1]) { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
-#define lcprintfvv(ctxLC, _Format, ...)      { if(ctxLC->fPrintf[2]) { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
-#define lcprintfvvv(ctxLC, _Format, ...)     { if(ctxLC->fPrintf[3]) { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
-#define lcprintf_fn(ctxLC, _Format, ...)     { if(ctxLC->fPrintf[0]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
-#define lcprintfv_fn(ctxLC, _Format, ...)    { if(ctxLC->fPrintf[1]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
-#define lcprintfvv_fn(ctxLC, _Format, ...)   { if(ctxLC->fPrintf[2]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
-#define lcprintfvvv_fn(ctxLC, _Format, ...)  { if(ctxLC->fPrintf[3]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
+#define lcprintf(ctxLC, _Format, ...)        { if(ctxLC->fPrintf[LC_PRINTF_ENABLE]) { ctxLC->Config.pfn_printf_opt ? ctxLC->Config.pfn_printf_opt(_Format, ##__VA_ARGS__) : printf(_Format, ##__VA_ARGS__); } }
+#define lcprintfv(ctxLC, _Format, ...)       { if(ctxLC->fPrintf[LC_PRINTF_V]) { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
+#define lcprintfvv(ctxLC, _Format, ...)      { if(ctxLC->fPrintf[LC_PRINTF_VV]) { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
+#define lcprintfvvv(ctxLC, _Format, ...)     { if(ctxLC->fPrintf[LC_PRINTF_VVV]) { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
+#define lcprintf_fn(ctxLC, _Format, ...)     { if(ctxLC->fPrintf[LC_PRINTF_ENABLE]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
+#define lcprintfv_fn(ctxLC, _Format, ...)    { if(ctxLC->fPrintf[LC_PRINTF_V]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
+#define lcprintfvv_fn(ctxLC, _Format, ...)   { if(ctxLC->fPrintf[LC_PRINTF_VV]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
+#define lcprintfvvv_fn(ctxLC, _Format, ...)  { if(ctxLC->fPrintf[LC_PRINTF_VVV]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
 
 /*
 * Check whether the memory map is initialized or not.
