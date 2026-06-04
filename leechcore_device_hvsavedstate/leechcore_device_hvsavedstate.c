@@ -387,7 +387,7 @@ BOOL DeviceHvSavedState_Init(_In_ PLC_CONTEXT ctxLC, _Inout_ PHVSAVEDSTATE_CONTE
 
     UINT32 vpId = 0;
     if(ctx->fn.GetArchitecture(ctx->hVmSavedStateDumpHandle, vpId, &ctx->architecture) != S_OK) {
-        lcprintfvv_fn(ctxLC, "ERROR: GetPagingMode() failed.\n");
+        lcprintf_fn(ctxLC, "ERROR: GetPagingMode() failed.\n");
         return FALSE;
     }
 
@@ -396,7 +396,7 @@ BOOL DeviceHvSavedState_Init(_In_ PLC_CONTEXT ctxLC, _Inout_ PHVSAVEDSTATE_CONTE
     if(ctx->fn.GetRegisterValue(ctx->hVmSavedStateDumpHandle, vpId, &reg) == S_OK) {
         ctx->regCr3 = reg.RegisterValue;
     } else {
-        lcprintfvv_fn(ctxLC, "ERROR: GetPagingMode(Cr3) failed.\n");
+        lcprintf_fn(ctxLC, "ERROR: GetPagingMode(Cr3) failed.\n");
     }
 
     reg.Architecture = ctx->architecture;
@@ -404,7 +404,7 @@ BOOL DeviceHvSavedState_Init(_In_ PLC_CONTEXT ctxLC, _Inout_ PHVSAVEDSTATE_CONTE
     if(ctx->fn.GetRegisterValue(ctx->hVmSavedStateDumpHandle, vpId, &reg) != S_OK) {
         ctx->regRip = reg.RegisterValue;
     } else {
-        lcprintfvv_fn(ctxLC, "ERROR: GetPagingMode() failed.\n");
+        lcprintf_fn(ctxLC, "ERROR: GetPagingMode() failed.\n");
     }
 
     lcprintfv(ctxLC, "[%d] VP Architecture %s\n", vpId, ctx->architecture == Arch_x64 ? "x64" : "x86");

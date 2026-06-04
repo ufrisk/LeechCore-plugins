@@ -146,7 +146,7 @@ int fpga_get_chip_configuration(struct fpga_context *ctx, void *config)
 
     err = ftdi_GetChipConfiguration(ctx, config);
     if(err != sizeof(struct FT_60XCONFIGURATION)) {
-        vprintfv("[-] cannot get chip config: %s\n", libusb_strerror(err));
+        vprintf("[-] cannot get chip config: %s\n", libusb_strerror(err));
         rc = -1;
     }
 
@@ -184,13 +184,13 @@ struct fpga_context* fpga_open(int device_index)
 
     err = libusb_init(&ctx->usb_ctx);
     if(err) {
-        vprintfv("[-] libusb_init failed: %s\n", libusb_strerror(err));
+        vprintf("[-] libusb_init failed: %s\n", libusb_strerror(err));
         goto fail;
     }
 
     device_count = libusb_get_device_list(ctx->usb_ctx, &device_list);
     if(device_count < 0) {
-        vprintfv("[-] Cannot get device list: %s\n", libusb_strerror(device_count));
+        vprintf("[-] Cannot get device list: %s\n", libusb_strerror(device_count));
         goto fail;
     }
 
@@ -200,7 +200,7 @@ struct fpga_context* fpga_open(int device_index)
 
         err = libusb_get_device_descriptor(device, &desc);
         if(err) {
-            vprintfv("[-] Cannot get device descriptor: %s\n", libusb_strerror(err));
+            vprintf("[-] Cannot get device descriptor: %s\n", libusb_strerror(err));
             goto fail;
         }
 
@@ -225,7 +225,7 @@ struct fpga_context* fpga_open(int device_index)
 
     err = libusb_open(device, &ctx->device_handle);
     if(err) {
-        vprintfv("[-] Cannot open device: %s\n", libusb_strerror(err));
+        vprintf("[-] Cannot open device: %s\n", libusb_strerror(err));
         goto fail;
     }
 
@@ -252,7 +252,7 @@ struct fpga_context* fpga_open(int device_index)
 
     err = ftdi_GetChipConfiguration(ctx, &chip_configuration);
     if(err != sizeof(chip_configuration)) {
-        vprintfv("[-] Cannot get chip configuration: %s\n", libusb_strerror(err));
+        vprintf("[-] Cannot get chip configuration: %s\n", libusb_strerror(err));
         goto fail;
     }
 
@@ -269,7 +269,7 @@ struct fpga_context* fpga_open(int device_index)
 
         err = ftdi_SetChipConfiguration(ctx, &chip_configuration);
         if(err != sizeof(chip_configuration)) {
-            vprintfv("[-] Cannot set chip configuration: %s\n", libusb_strerror(err));
+            vprintf("[-] Cannot set chip configuration: %s\n", libusb_strerror(err));
             goto fail;
         }
 
@@ -277,33 +277,33 @@ struct fpga_context* fpga_open(int device_index)
 
     err = libusb_kernel_driver_active(ctx->device_handle, FTDI_COMMUNICATION_INTERFACE);
     if(err < 0) {
-        vprintfv("[-] Cannot get kernel driver status for FTDI_COMMUNICATION_INTERFACE: %s\n", libusb_strerror(err));
+        vprintf("[-] Cannot get kernel driver status for FTDI_COMMUNICATION_INTERFACE: %s\n", libusb_strerror(err));
         goto fail;
     }
     if(err) {
-        vprintfv("[-] driver is active on FTDI_COMMUNICATION_INTERFACE = %d\n", err);
+        vprintf("[-] driver is active on FTDI_COMMUNICATION_INTERFACE = %d\n", err);
         goto fail;
     }
 
     err = libusb_kernel_driver_active(ctx->device_handle, FTDI_DATA_INTERFACE);
     if(err < 0) {
-        vprintfv("[-] Cannot get kernel driver status for FTDI_DATA_INTERFACE: %s\n", libusb_strerror(err));
+        vprintf("[-] Cannot get kernel driver status for FTDI_DATA_INTERFACE: %s\n", libusb_strerror(err));
         goto fail;
     }
     if(err) {
-        vprintfv("[-] driver is active on FTDI_DATA_INTERFACE = %d\n", err);
+        vprintf("[-] driver is active on FTDI_DATA_INTERFACE = %d\n", err);
         goto fail;
     }
 
     err = libusb_claim_interface(ctx->device_handle, FTDI_COMMUNICATION_INTERFACE);
     if(err != 0) {
-        vprintfv("[-] Cannot claim interface FTDI_COMMUNICATION_INTERFACE: %s\n", libusb_strerror(err));
+        vprintf("[-] Cannot claim interface FTDI_COMMUNICATION_INTERFACE: %s\n", libusb_strerror(err));
         goto fail;
     }
 
     err = libusb_claim_interface(ctx->device_handle, FTDI_DATA_INTERFACE);
     if(err != 0) {
-        vprintfv("[-] Cannot claim interface FTDI_DATA_INTERFACE: %s\n", libusb_strerror(err));
+        vprintf("[-] Cannot claim interface FTDI_DATA_INTERFACE: %s\n", libusb_strerror(err));
         goto fail;
     }
     return ctx;
@@ -332,14 +332,14 @@ int fpga_read_internal(struct fpga_context *ctx, void *data, int size, int *tran
 
     err = ftdi_SendCmdRead(ctx, size);
     if(err) {
-        vprintfv("[-] cannot send CmdRead ftdi: %s", libusb_strerror(err));
+        vprintf("[-] cannot send CmdRead ftdi: %s", libusb_strerror(err));
         return -1;
     }
 
     *transferred = 0;
     err = libusb_bulk_transfer(ctx->device_handle, FTDI_ENDPOINT_IN, data, size, transferred, 0);
     if(err < 0) {
-        vprintfv("[-] bulk transfer error: %s", libusb_strerror(err));
+        vprintf("[-] bulk transfer error: %s", libusb_strerror(err));
         return -1;
     }
 
@@ -349,7 +349,7 @@ int fpga_read_internal(struct fpga_context *ctx, void *data, int size, int *tran
 int fpga_read(struct fpga_context *ctx, void *data, int size, int *transferred)
 {
     if(ctx->async.is_thread_read) {
-        vprintfv("[-] previous async read is not yet completed. complete by reading results before initiating new read!\n");
+        vprintf("[-] previous async read is not yet completed. complete by reading results before initiating new read!\n");
         return -1;
     }
     return fpga_read_internal(ctx, data, size, transferred);
@@ -363,12 +363,12 @@ int fpga_write(struct fpga_context *ctx, void *data, int size, int *transferred)
     err = libusb_bulk_transfer(ctx->device_handle, FTDI_ENDPOINT_OUT, data, size, transferred, 1000);
 
     if(err < 0) {
-        vprintfv("[-] bulk transfer error: %s", libusb_strerror(err));
+        vprintf("[-] bulk transfer error: %s", libusb_strerror(err));
         return -1;
     }
 
     if(*transferred != size) {
-        vprintfv("[-] only %d bytes transferred\n", *transferred);
+        vprintf("[-] only %d bytes transferred\n", *transferred);
         return -1;
     }
 
@@ -401,7 +401,7 @@ void* fpga_async_thread(void* thread_ctx)
 int fpga_async_init(struct fpga_context *ctx)
 {
     if(ctx->async.is_valid) {
-        vprintfv("[-] only one async overlapped supported. close previous one before open new!\n");
+        vprintf("[-] only one async overlapped supported. close previous one before open new!\n");
         return -1;
     }
 
@@ -412,7 +412,7 @@ int fpga_async_init(struct fpga_context *ctx)
 
     pthread_create(&ctx->async.tid, NULL, fpga_async_thread, ctx);
     if(!ctx->async.tid) {
-        vprintfv("[-] failed creating thread.\n");
+        vprintf("[-] failed creating thread.\n");
         memset(&ctx->async, 0, sizeof(ctx->async));
         return -1;
     }
@@ -434,11 +434,11 @@ int fpga_async_close(struct fpga_context *ctx)
 int fpga_async_read(struct fpga_context *ctx, void *data, int size)
 {
     if(!ctx->async.is_valid) {
-        vprintfv("[-] invalid context!\n");
+        vprintf("[-] invalid context!\n");
         return -1;
     }
     if(ctx->async.is_thread_read) {
-        vprintfv("[-] previous async read is not yet completed. complete by reading results before initiating new read!\n");
+        vprintf("[-] previous async read is not yet completed. complete by reading results before initiating new read!\n");
         return -1;
     }
     ctx->async.data = data;
@@ -453,7 +453,7 @@ int fpga_async_read(struct fpga_context *ctx, void *data, int size)
 int fpga_async_result(struct fpga_context *ctx, uint32_t *transferred)
 {
     if(!ctx->async.is_valid) {
-        vprintfv("[-] invalid context!\n");
+        vprintf("[-] invalid context!\n");
         return -1;
     }
     if(ctx->async.is_thread_read) {

@@ -17,7 +17,7 @@ static VOID DeviceDevmem_ReadContigious(PLC_READ_CONTIGIOUS_CONTEXT ctxRC) {
 
     lseek(fd, ctxRC->paBase, SEEK_SET);
     if ((bytes_read = read(fd, ctxRC->pb, ctxRC->cb)) < 0) {
-        lcprintfvvv(ctxRC->ctxLC, "Failed to read physical memory at 0x%llx (error %d)\n",
+        lcprintf(ctxRC->ctxLC, "Failed to read physical memory at 0x%llx (error %d)\n",
                     ctxRC->paBase, bytes_read);
     }
     ctxRC->cbRead = (DWORD)bytes_read;
@@ -30,7 +30,7 @@ static BOOL DeviceDevmem_WriteContigious(_In_ PLC_CONTEXT ctxLC,
     int fd = (intptr_t)ctxLC->hDevice;
     lseek(fd, qwAddr, SEEK_SET);
     if ((bytes_written = write(fd, pb, cb)) < 0) {
-        lcprintfvvv(ctxLC, "Failed to write physical memory at 0x%llx (error %d)\n",
+        lcprintf(ctxLC, "Failed to write physical memory at 0x%llx (error %d)\n",
                     qwAddr, bytes_written);
         return false;
     }

@@ -71,8 +71,6 @@ VOID ReleaseSRWLockExclusive(_Inout_ PSRWLOCK pSRWLock)
 // FPGA driver defines:
 // ----------------------------------------------------------------------------
 
-#define vprintfv(format, ...)       { printf(format, ##__VA_ARGS__); }
-
 struct fpga_context {
     void *lib;
     HANDLE ftHandle;
@@ -126,7 +124,7 @@ struct fpga_context *fpga_open(void *pvArg, uint32_t dwFlags)
     // load lib:
     ctx->lib = dlopen("libftd3xx.dylib", RTLD_NOW);
     if(!ctx->lib) {
-        vprintfv("[-] Unable to open library: 'libftd3xx.dylib'\n");
+        vprintf("[-] Unable to open library: 'libftd3xx.dylib'\n");
         goto fail;
     }
 
@@ -139,7 +137,7 @@ struct fpga_context *fpga_open(void *pvArg, uint32_t dwFlags)
     ctx->pfn.pfnFT_WritePipe = (PFN_FT_WritePipe)dlsym(ctx->lib, "FT_WritePipe");
     ctx->pfn.pfnFT_ReadPipe = (PFN_FT_ReadPipe)dlsym(ctx->lib, "FT_ReadPipe");
     if(!ctx->pfn.pfnFT_AbortPipe || !ctx->pfn.pfnFT_Close || !ctx->pfn.pfnFT_Create || !ctx->pfn.pfnFT_GetChipConfiguration || !ctx->pfn.pfnFT_SetChipConfiguration || !ctx->pfn.pfnFT_WritePipe || !ctx->pfn.pfnFT_ReadPipe) {
-        vprintfv("[-] Unable to find function in library\n");
+        vprintf("[-] Unable to find function in library\n");
         goto fail;
     }
 
@@ -149,7 +147,7 @@ struct fpga_context *fpga_open(void *pvArg, uint32_t dwFlags)
     // ft601 initialize handle:
     rc = ctx->pfn.pfnFT_Create(pvArg, dwFlags, &ctx->ftHandle);
     if(rc) {
-        vprintfv("[-] Unable to create device (rc = %i)\n", rc);
+        vprintf("[-] Unable to create device (rc = %i)\n", rc);
         goto fail;
     }
 
@@ -190,7 +188,7 @@ uint32_t fpga_read(struct fpga_context *ctx, void *data, uint32_t size, uint32_t
 {
     uint32_t rc;
     if(ctx->async.is_thread_read) {
-        vprintfv("[-] previous async read is not yet completed. complete by reading results before initiating new read!\n");
+        vprintf("[-] previous async read is not yet completed. complete by reading results before initiating new read!\n");
         return FT_OTHER_ERROR;
     }
     if(ctx->is_safe_mode) {
@@ -241,7 +239,7 @@ int fpga_read_internal(struct fpga_context *ctx, void *data, int size, int *tran
         ReleaseSRWLockExclusive(&ctx->lock);
     }
     if(rc) {
-        vprintfv("[-] bulk transfer error: %i \n", rc);
+        vprintf("[-] bulk transfer error: %i \n", rc);
         return -1;
     }
     return 0;
@@ -267,7 +265,7 @@ void* fpga_async_thread(void* thread_ctx)
 int fpga_async_init(struct fpga_context *ctx)
 {
     if(ctx->async.is_valid) {
-        vprintfv("[-] only one async overlapped supported. close previous one before open new!\n");
+        vprintf("[-] only one async overlapped supported. close previous one before open new!\n");
         return -1;
     }
     ctx->async.is_result = 1;
@@ -276,7 +274,7 @@ int fpga_async_init(struct fpga_context *ctx)
     AcquireSRWLockExclusive(&ctx->async.lock_thread_read);
     pthread_create(&ctx->async.tid, NULL, fpga_async_thread, ctx);
     if(!ctx->async.tid) {
-        vprintfv("[-] failed creating thread.\n");
+        vprintf("[-] failed creating thread.\n");
         memset(&ctx->async, 0, sizeof(ctx->async));
         return -1;
     }
@@ -297,11 +295,11 @@ int fpga_async_close(struct fpga_context *ctx)
 int fpga_async_read(struct fpga_context *ctx, void *data, int size)
 {
     if(!ctx->async.is_valid) {
-        vprintfv("[-] invalid context!\n");
+        vprintf("[-] invalid context!\n");
         return -1;
     }
     if(ctx->async.is_thread_read) {
-        vprintfv("[-] previous async read is not yet completed. complete by reading results before initiating new read!\n");
+        vprintf("[-] previous async read is not yet completed. complete by reading results before initiating new read!\n");
         return -1;
     }
     ctx->async.data = data;
@@ -316,7 +314,7 @@ int fpga_async_read(struct fpga_context *ctx, void *data, int size)
 int fpga_async_result(struct fpga_context *ctx, uint32_t *transferred)
 {
     if(!ctx->async.is_valid) {
-        vprintfv("[-] invalid context!\n");
+        vprintf("[-] invalid context!\n");
         return -1;
     }
     if(ctx->async.is_thread_read) {
