@@ -15,10 +15,10 @@
 // device may be created/opened - if only one instance may be open at the same
 // time this should be handled by the plugin module itself.
 //
-// (c) Ulf Frisk, 2020-2025
+// (c) Ulf Frisk, 2020-2026
 // Author: Ulf Frisk, pcileech@frizk.net
 //
-// Header Version: 2.5
+// Header Version: 2.23
 //
 
 #ifndef __LEECHCORE_DEVICE_H__
@@ -121,6 +121,8 @@ typedef struct tdLC_CONTEXT {
         BOOL fCompress;
         DWORD dwRpcClientId;
     } Rpc;
+    // New functionality, plugins must ensure they are called by LeechCore 2.23+ before using.
+    BOOL(*pfnReadScatterEx)(_In_ PLC_CONTEXT ctxLC, _In_ DWORD cpMEMs, _Inout_ PPMEM_SCATTER ppMEMs, _Out_writes_(cpMEMs) PLC_READ_PAGE_RESULT pResults);
 } LC_CONTEXT, *PLC_CONTEXT;
 
 /*
@@ -139,14 +141,14 @@ EXPORTED_FUNCTION PLC_DEVICE_PARAMETER_ENTRY LcDeviceParameterGet(_In_ PLC_CONTE
 */
 EXPORTED_FUNCTION QWORD LcDeviceParameterGetNumeric(_In_ PLC_CONTEXT ctxLC, _In_ LPSTR szName);
 
-#define lcprintf(ctxLC, _Format, ...)        { if(ctxLC->fPrintf[0]) { ctxLC->Config.pfn_printf_opt ? ctxLC->Config.pfn_printf_opt(_Format, ##__VA_ARGS__) : printf(_Format, ##__VA_ARGS__); } }
-#define lcprintfv(ctxLC, _Format, ...)       { if(ctxLC->fPrintf[1]) { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
-#define lcprintfvv(ctxLC, _Format, ...)      { if(ctxLC->fPrintf[2]) { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
-#define lcprintfvvv(ctxLC, _Format, ...)     { if(ctxLC->fPrintf[3]) { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
-#define lcprintf_fn(ctxLC, _Format, ...)     { if(ctxLC->fPrintf[0]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
-#define lcprintfv_fn(ctxLC, _Format, ...)    { if(ctxLC->fPrintf[1]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
-#define lcprintfvv_fn(ctxLC, _Format, ...)   { if(ctxLC->fPrintf[2]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
-#define lcprintfvvv_fn(ctxLC, _Format, ...)  { if(ctxLC->fPrintf[3]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
+#define lcprintf(ctxLC, _Format, ...)        { if(ctxLC->fPrintf[LC_PRINTF_ENABLE]) { ctxLC->Config.pfn_printf_opt ? ctxLC->Config.pfn_printf_opt(_Format, ##__VA_ARGS__) : printf(_Format, ##__VA_ARGS__); } }
+#define lcprintfv(ctxLC, _Format, ...)       { if(ctxLC->fPrintf[LC_PRINTF_V])      { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
+#define lcprintfvv(ctxLC, _Format, ...)      { if(ctxLC->fPrintf[LC_PRINTF_VV])     { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
+#define lcprintfvvv(ctxLC, _Format, ...)     { if(ctxLC->fPrintf[LC_PRINTF_VVV])    { lcprintf(ctxLC, _Format, ##__VA_ARGS__); } }
+#define lcprintf_fn(ctxLC, _Format, ...)     { if(ctxLC->fPrintf[LC_PRINTF_ENABLE]) { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
+#define lcprintfv_fn(ctxLC, _Format, ...)    { if(ctxLC->fPrintf[LC_PRINTF_V])      { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
+#define lcprintfvv_fn(ctxLC, _Format, ...)   { if(ctxLC->fPrintf[LC_PRINTF_VV])     { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
+#define lcprintfvvv_fn(ctxLC, _Format, ...)  { if(ctxLC->fPrintf[LC_PRINTF_VVV])    { lcprintf(ctxLC, "%s: "_Format, __func__, ##__VA_ARGS__); } }
 
 /*
 * Check whether the memory map is initialized or not.
