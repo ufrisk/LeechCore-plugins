@@ -230,6 +230,14 @@ The leechcore_ft601_driver_linux library allows applications access to a limited
 
 The library requires libusb (`apt-get install libusb-1.0-0`) and access to the usb device (permission change or run as root may be required) alternatively a [Kernel Driver](https://github.com/lambdaconcept/ft60x_driver) provided by LambdaConcept. LeechCore will automatically attempt to locate the kernel driver before using libusb as fallback.
 
+The built-in libusb backend supports cancellable overlapped reads and
+independent per-pipe RX/TX timeouts. Nonblocking overlap checks return while a
+read is still pending, and aborting the RX pipe cancels the submitted libusb
+transfer before its resources are released. The optional LambdaConcept kernel
+backend remains synchronous; it uses nonblocking, deadline-bounded I/O and
+`FT_AbortPipe(0x82)` closes a descriptor whose RX request is still pending
+after timeout so that the caller can recover by opening a fresh handle.
+
 #### Installation instructions:
 Place leechcore_ft601_driver_linux.so alongside leechcore.so.
 

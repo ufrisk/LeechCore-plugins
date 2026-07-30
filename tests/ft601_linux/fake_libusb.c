@@ -22,8 +22,10 @@ typedef struct tdFAKE_LIBUSB_STATE {
     int sync_transferred;
     unsigned int sync_delay_ms;
     unsigned int last_sync_timeout;
+    unsigned int last_async_timeout;
     FAKE_ASYNC_OUTCOME async_outcome;
     int async_transferred;
+    int event_status;
     unsigned int cancel_count;
     unsigned int set_config_count;
     unsigned int free_device_list_count;
@@ -64,9 +66,19 @@ void fake_libusb_set_async_outcome(
     g_state.async_transferred = transferred;
 }
 
+void fake_libusb_set_event_status(int status)
+{
+    g_state.event_status = status;
+}
+
 unsigned int fake_libusb_last_sync_timeout(void)
 {
     return g_state.last_sync_timeout;
+}
+
+unsigned int fake_libusb_last_async_timeout(void)
+{
+    return g_state.last_async_timeout;
 }
 
 unsigned int fake_libusb_cancel_count(void)
@@ -267,6 +279,10 @@ int LIBUSB_CALL libusb_bulk_transfer(
     (void)dev_handle;
     (void)data;
     g_state.last_sync_timeout = timeout;
+    if(endpoint == 0x01) {
+        *transferred = length;
+        return LIBUSB_SUCCESS;
+    }
     if(g_state.sync_delay_ms) {
         usleep(g_state.sync_delay_ms * 1000);
     }
@@ -274,9 +290,6 @@ int LIBUSB_CALL libusb_bulk_transfer(
         length :
         g_state.sync_transferred;
     *transferred = result_length;
-    if(endpoint == 0x01) {
-        return LIBUSB_SUCCESS;
-    }
     return g_state.sync_status;
 }
 
@@ -303,6 +316,7 @@ void LIBUSB_CALL libusb_free_transfer(struct libusb_transfer *transfer)
 int LIBUSB_CALL libusb_submit_transfer(struct libusb_transfer *transfer)
 {
     g_state.submitted_transfer = transfer;
+    g_state.last_async_timeout = transfer->timeout;
     return LIBUSB_SUCCESS;
 }
 
@@ -327,6 +341,9 @@ int LIBUSB_CALL libusb_handle_events_timeout_completed(
     struct libusb_transfer *transfer = g_state.submitted_transfer;
     (void)ctx;
     (void)tv;
+    if(g_state.event_status) {
+        return g_state.event_status;
+    }
     if(!transfer || g_state.async_outcome == FAKE_ASYNC_PENDING) {
         return LIBUSB_SUCCESS;
     }

@@ -67,6 +67,13 @@ uint32_t FT_SetSuspendTimeout(
 );
 
 __attribute__((visibility("default")))
+uint32_t FT_SetPipeTimeout(
+    struct ft_handle *ftHandle,
+    uint8_t ucPipeID,
+    uint32_t ulTimeoutInMs
+);
+
+__attribute__((visibility("default")))
 uint32_t FT_AbortPipe(
     struct ft_handle *ftHandle,
     uint8_t ucPipeID

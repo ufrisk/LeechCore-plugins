@@ -15,13 +15,46 @@ struct fpga_context* fpga_open(int device_index);
 int fpga_close(struct fpga_context *ctx);
 int fpga_get_chip_configuration(struct fpga_context *ctx, void *config);
 int fpga_set_chip_configuration(struct fpga_context *ctx, void *config);
-int fpga_read(struct fpga_context *ctx, void *data, int size, int *transferred);
-int fpga_write(struct fpga_context *ctx, void *data, int size, int *transferred);
+uint32_t fpga_read(
+    struct fpga_context *ctx,
+    void *data,
+    int size,
+    int *transferred,
+    uint32_t timeout_ms
+);
+uint32_t fpga_write(
+    struct fpga_context *ctx,
+    void *data,
+    int size,
+    int *transferred,
+    uint32_t timeout_ms
+);
 
-int fpga_async_init(struct fpga_context *ctx);
-int fpga_async_close(struct fpga_context *ctx);
-int fpga_async_read(struct fpga_context *ctx, void *data, int size);
-int fpga_async_result(struct fpga_context *ctx, uint32_t *transferred);
+#define FPGA_FT_OK                       0
+#define FPGA_FT_INVALID_PARAMETER        6
+#define FPGA_FT_TIMEOUT                 19
+#define FPGA_FT_IO_PENDING              24
+#define FPGA_FT_IO_INCOMPLETE           25
+#define FPGA_FT_DEVICE_NOT_CONNECTED    30
+#define FPGA_FT_OTHER_ERROR             32
+
+uint32_t fpga_async_init(struct fpga_context *ctx, void *cookie);
+uint32_t fpga_async_close(struct fpga_context *ctx, void *cookie);
+uint32_t fpga_async_read(
+    struct fpga_context *ctx,
+    void *cookie,
+    void *data,
+    int size,
+    uint32_t command_timeout_ms
+);
+uint32_t fpga_async_result(
+    struct fpga_context *ctx,
+    void *cookie,
+    uint32_t *transferred,
+    uint32_t is_wait
+);
+uint32_t fpga_async_abort(struct fpga_context *ctx, uint8_t endpoint);
+int fpga_async_shutdown(struct fpga_context *ctx);
 
 /*
 The FTDI device has 2 interfaces, with one or multiple endpoints, depending the configuration.
