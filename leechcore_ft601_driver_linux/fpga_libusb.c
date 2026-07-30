@@ -155,13 +155,8 @@ int fpga_get_chip_configuration(struct fpga_context *ctx, void *config)
 
 int fpga_set_chip_configuration(struct fpga_context *ctx, void *config)
 {
-    int rc = 0;
-
-    if(ftdi_SetChipConfiguration(ctx, config) != LIBUSB_SUCCESS) {
-        rc = -1;
-    }
-
-    return rc;
+    return ftdi_SetChipConfiguration(ctx, config) ==
+        sizeof(struct FT_60XCONFIGURATION) ? 0 : -1;
 }
 
 struct fpga_context* fpga_open(int device_index)
@@ -256,24 +251,6 @@ struct fpga_context* fpga_open(int device_index)
         goto fail;
     }
 
-
-    if(chip_configuration.FIFOMode != CONFIGURATION_FIFO_MODE_245 ||
-        chip_configuration.ChannelConfig != CONFIGURATION_CHANNEL_CONFIG_1 ||
-        chip_configuration.OptionalFeatureSupport != CONFIGURATION_OPTIONAL_FEATURE_DISABLEALL
-        ) {
-        vprintfv("[!] Bad FTDI configuration... setting chip config to fifo 245 && 1 channel, no feature support\n");
-
-        chip_configuration.FIFOMode = CONFIGURATION_FIFO_MODE_245;
-        chip_configuration.ChannelConfig = CONFIGURATION_CHANNEL_CONFIG_1;
-        chip_configuration.OptionalFeatureSupport = CONFIGURATION_OPTIONAL_FEATURE_DISABLEALL;
-
-        err = ftdi_SetChipConfiguration(ctx, &chip_configuration);
-        if(err != sizeof(chip_configuration)) {
-            vprintfv("[-] Cannot set chip configuration: %s\n", libusb_strerror(err));
-            goto fail;
-        }
-
-    }
 
     err = libusb_kernel_driver_active(ctx->device_handle, FTDI_COMMUNICATION_INTERFACE);
     if(err < 0) {

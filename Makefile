@@ -9,6 +9,9 @@ all:
 	$(MAKE) -C leechcore_device_skeleton
 	$(MAKE) -C leechcore_device_devmem
 
+test-ft601:
+	$(MAKE) -C tests/ft601_linux test
+
 clean:
 	$(MAKE) -C leechcore_ft601_driver_linux clean
 	$(MAKE) -C leechcore_device_rawtcp clean
