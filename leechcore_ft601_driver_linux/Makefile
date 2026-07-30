@@ -1,18 +1,32 @@
-CC=gcc
-CFLAGS  += -I. -D LINUX -shared -fPIC -fvisibility=hidden `pkg-config libusb-1.0 --libs --cflags`
-LDFLAGS += -g -shared
-DEPS = leechcore_ft601_driver_linux.h
-OBJ = fpga_libusb.o leechcore_ft601_driver_linux.o
+CC ?= gcc
+
+CPPFLAGS += -I. -D_GNU_SOURCE -D LINUX \
+	$(shell pkg-config libusb-1.0 --cflags)
+CFLAGS += -std=c11 -fPIC -fvisibility=hidden \
+	-Wall -Wextra -Werror
+LDFLAGS += -shared
+LDLIBS += $(shell pkg-config libusb-1.0 --libs) -pthread
+
+DEPS = \
+	leechcore_ft601_driver_linux.h \
+	fpga_libusb.h \
+	ft601_posix.h
+OBJ = \
+	fpga_libusb.o \
+	ft601_posix.o \
+	leechcore_ft601_driver_linux.o
+TARGET = ../files/leechcore_ft601_driver_linux.so
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): $(OBJ)
+	mkdir -p $(dir $@)
+	$(CC) $(LDFLAGS) -o $@ $(OBJ) $(LDLIBS)
 
 %.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-leechcore_ft601_driver_linux: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) -o leechcore_ft601_driver_linux.so $(LDFLAGS)
-	rm *.o
-	mkdir -p ../files
-	mv leechcore_ft601_driver_linux.so ../files/
-	true
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f *.o
+	rm -f $(OBJ) $(TARGET)
